@@ -24,7 +24,7 @@ func Slice[T basicTypes](key string, s []T) slog.Attr {
 			elements = append(elements, fmt.Sprintf("%v", e))
 		}
 
-		merged := strings.Join(elements, string(sliceElementDivider))
+		merged := strings.Join(elements, string(elementDivider))
 		val := fmt.Sprintf("slice[%s]", merged)
 		return slog.String(key, val)
 	}
@@ -46,7 +46,7 @@ func Map[K basicTypes, V basicTypes](key string, m map[K]V) slog.Attr {
 			elements = append(elements, fmt.Sprintf("%v:%v", k, v))
 		}
 
-		merged := strings.Join(elements, string(sliceElementDivider))
+		merged := strings.Join(elements, string(elementDivider))
 		val := fmt.Sprintf("map[%s]", merged)
 		return slog.String(key, val)
 	}

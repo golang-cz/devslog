@@ -12,7 +12,7 @@ import (
 )
 
 func Test_NewHandlerDefaults(t *testing.T) {
-	sliceElementDivider = string(rune(29))
+	elementDivider = string(rune(29))
 	opts := &Options{
 		HandlerOptions: &slog.HandlerOptions{},
 	}
@@ -45,10 +45,10 @@ func Test_NewHandlerDefaults(t *testing.T) {
 
 func Test_NewHandlerWithOptions(t *testing.T) {
 	handlerOpts := &Options{
-		HandlerOptions:      &slog.HandlerOptions{Level: slog.LevelWarn},
-		MaxSlicePrintSize:   10,
-		SliceElementDivider: "||",
-		TimeFormat:          "[06:05]",
+		HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelWarn},
+		MaxSlicePrintSize: 10,
+		ElementDivider:    "||",
+		TimeFormat:        "[06:05]",
 	}
 	h := NewHandler(nil, handlerOpts)
 
@@ -64,8 +64,8 @@ func Test_NewHandlerWithOptions(t *testing.T) {
 		t.Errorf("Expected custom TimeFormat to be \"[06:05]\" ")
 	}
 
-	if h.opts.SliceElementDivider != "||" {
-		t.Errorf("Expected custom SliceElementDivider to be '||'")
+	if h.opts.ElementDivider != "||" {
+		t.Errorf("Expected custom ElementDivider to be '||'")
 	}
 }
 
@@ -175,7 +175,7 @@ func Test_ArrayString(t *testing.T) {
 	data := []string{"apple", "ba na na"}
 	expected := "\x1b[33m2\x1b[0m \x1b[32mslice[\x1b[0m\n    \x1b[32m0\x1b[0m: \x1b[34mapple\x1b[0m\n    \x1b[32m1\x1b[0m: \x1b[34mba na na\x1b[0m \x1b[32m]\x1b[0m"
 
-	result := h.arrayString(fmt.Sprintf("slice[%v%v%v]", data[0], sliceElementDivider, data[1]), 0)
+	result := h.arrayString(fmt.Sprintf("slice[%v%v%v]", data[0], elementDivider, data[1]), 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
@@ -219,7 +219,7 @@ func Test_MapString(t *testing.T) {
 	data := map[string]string{"a": "1", "b": "2"}
 	expected := "\x1b[33m2\x1b[0m \x1b[32mmap[\x1b[0m\n    \x1b[32ma\x1b[0m : \x1b[34m1\x1b[0m\n    \x1b[32mb\x1b[0m : \x1b[34m2\x1b[0m \x1b[32m]\x1b[0m"
 
-	result := h.mapString(fmt.Sprintf("map[%s:%s%s%s:%s]", "a", data["a"], sliceElementDivider, "b", data["b"]), 0)
+	result := h.mapString(fmt.Sprintf("map[%s:%s%s%s:%s]", "a", data["a"], elementDivider, "b", data["b"]), 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
