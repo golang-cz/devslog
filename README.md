@@ -5,7 +5,14 @@
 
 `devslog` is zero dependency custom logging handler for Go's standard [`log/slog`](https://pkg.go.dev/log/slog) package that provides structured logging with colorful and indented structure for developing.
 
-![image](https://github.com/golang-cz/devslog/assets/17728576/7c870a4e-1f77-4bb1-a042-db2704ba8547)
+### Develop with this output
+![image](https://github.com/golang-cz/devslog/assets/17728576/30a0d98a-a2de-4aa8-a4c4-e60d0c325049)
+
+### Instead of these outputs
+`TextHandler`
+![image](https://github.com/golang-cz/devslog/assets/17728576/856f7e34-dc72-4f22-bd47-9fd5cbf7dd2f)
+`JSONHandler`
+![image](https://github.com/golang-cz/devslog/assets/17728576/3d4b091d-813a-461d-88e1-4cc95b9d6939)
 
 ## Install
 ```
@@ -93,18 +100,18 @@ slog.SetDefault(logger)
 ```
 
 ## Options
-| Parameter           | Description                                                                                                                                                                         | Default          | Value  |
-|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|--------|
-| MaxSlicePrintSize   | Defines the maximum number of elements for slice, that would be printed.                                                                                                            | 50               | uint   |
-| SortKeys            | If the attributes should be sorted by keys.                                                                                                                                         | false            | bool   |
-| TimeFormat          | Time format for timestamp.                                                                                                                                                          | "[15:06:05]"     | string |
-| SliceElementDivider | Global variable. Character for splitting elements in slices and maps. I don't recommend to change this value, but i made it optional. Default is 'Group separator' - ASCII code 29. | string(rune(29)) | string |
+| Parameter         | Description                                                                                                                                                        | Default          | Value  |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|--------|
+| MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice.                                                                                                     | 50               | uint   |
+| SortKeys          | Determines if attributes should be sorted by keys.                                                                                                                 | false            | bool   |
+| TimeFormat        | Time format for timestamp.                                                                                                                                         | "[15:06:05]"     | string |
+| ElementDivider    | Global variable. Character used to separate elements in slices and maps.  While change is possible, the default 'Group separator' (ASCII code 29)  is recommended. | string(rune(29)) | string |
 
 ## Custom functions
-If the `devslog` is not initialized, then these functions just pass the arguments to `slog.Any()`, so in the production the output wouldn't be modified.
+If `devslog` is not initialized, these functions simply pass the arguments to `slog.Any()`, ensuring no modification to the output when they are used in production environment.
 
-### Slice()
-You can pass slice with basic types instead of use `slog.Any()`
+### `Slice()`
+Instead of relying on `slog.Any()`, you have the option to directly pass a slice of basic types, resulting in cleaner and formatted output. This approach enhances the readability of your logs. It uses `SliceElementDivider` for identifying single elements.
 ```go
 sampleSlice := []string{"dsa", "ba na na"}
 
@@ -114,8 +121,8 @@ slog.Info(
 )
 ```
 
-### Map()
-You can pass map with basic types instead of use `slog.Any()`
+### `Map()`
+Similar to `Slice()`, you can pass a map of basic types.
 ```go
 sampleMap := map[string]string{
 	"apple":    "pear",
