@@ -1,2 +1,2 @@
 # Ignore coverage.out
-*.out
+coverage.txt

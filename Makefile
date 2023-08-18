@@ -4,10 +4,10 @@ test:
 	@go test
 
 test-coverage:
-	@go test -cover -coverprofile=coverage.out ./... -json
+	@go test -cover -coverprofile=coverage.txt ./... -json
 
 test-coverage-inspect: test-coverage
-	@go tool cover -html=coverage.out
+	@go tool cover -html=coverage.txt
 
 test-tparse:
-	@go test -cover -coverprofile=coverage.out ./... -json | tparse -all
+	@go test -cover -coverprofile=coverage.txt ./... -json | tparse -all
