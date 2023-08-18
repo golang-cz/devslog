@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	sliceElementDivider = string(rune(29))
-	initialized         bool
+	elementDivider = string(rune(29))
+	initialized    bool
 )
 
 type developHandler struct {
@@ -42,7 +42,7 @@ type Options struct {
 	// Default is 'Group separator' - ASCII code 29.
 	// This is used, when logging slice with Slice() function.
 	// I don't recommend to change this value!
-	SliceElementDivider string
+	ElementDivider string
 }
 
 type groupOrAttrs struct {
@@ -72,8 +72,8 @@ func NewHandler(out io.Writer, opts *Options) *developHandler {
 			h.opts.MaxSlicePrintSize = 50
 		}
 
-		if opts.SliceElementDivider != "" {
-			sliceElementDivider = opts.SliceElementDivider
+		if opts.ElementDivider != "" {
+			elementDivider = opts.ElementDivider
 		}
 
 		if opts.TimeFormat == "" {
@@ -285,7 +285,7 @@ func isMap(s string) bool {
 	return strings.HasPrefix(s, "map[") && strings.HasSuffix(s, "]")
 }
 
-// Splitting is done by SliceElementDivider
+// Splitting is done by ElementDivider
 func (h *developHandler) arrayString(s string, l int) string {
 	s = strings.TrimPrefix(s, "slice[")
 	s = strings.TrimSuffix(s, "]")
@@ -293,7 +293,7 @@ func (h *developHandler) arrayString(s string, l int) string {
 		return fmt.Sprintf("%v %v", cs("0", fgYellow), cs("slice[]", fgGreen))
 	}
 
-	sl := strings.Split(s, string(sliceElementDivider))
+	sl := strings.Split(s, string(elementDivider))
 	length := cs(strconv.Itoa(len(sl)), fgYellow)
 	digits := len(strconv.Itoa(len(sl)))
 	if digits > 3 {
@@ -317,7 +317,7 @@ func (h *developHandler) arrayString(s string, l int) string {
 	return res
 }
 
-// Splitting is done by SliceElementDivider,
+// Splitting is done by ElementDivider,
 func (h *developHandler) mapString(s string, level int) string {
 	s = strings.TrimPrefix(s, "map[")
 	s = strings.TrimSuffix(s, "]")
@@ -325,7 +325,7 @@ func (h *developHandler) mapString(s string, level int) string {
 		return fmt.Sprintf("%v %v", cs("0", fgYellow), cs("map[]", fgGreen))
 	}
 
-	pairs := strings.Split(s, sliceElementDivider)
+	pairs := strings.Split(s, elementDivider)
 	resultMap := make(map[string]string)
 
 	for _, pair := range pairs {

@@ -111,7 +111,7 @@ slog.SetDefault(logger)
 If `devslog` is not initialized, these functions simply pass the arguments to `slog.Any()`, ensuring no modification to the output when they are used in production environment.
 
 ### `Slice()`
-Instead of relying on `slog.Any()`, you have the option to directly pass a slice of basic types, resulting in cleaner and formatted output. This approach enhances the readability of your logs. It uses `SliceElementDivider` for identifying single elements.
+Instead of relying on `slog.Any()`, you have the option to directly pass a slice of basic types, resulting in cleaner and formatted output. This approach enhances the readability of your logs. It uses `ElementDivider` for identifying single elements.
 ```go
 sampleSlice := []string{"dsa", "ba na na"}
 
