@@ -252,10 +252,7 @@ func (h *developHandler) colorize(buf []byte, as attributes, level int, groups [
 			case map[string]interface{}:
 				mark = cs("M", fgGreen)
 				val = h.formatMap(decoded, level)
-			default:
-				fmt.Println("Unknown type")
 			}
-
 		case slog.KindGroup:
 			mark = cs("G", fgGreen)
 			var groupAttrs attributes
