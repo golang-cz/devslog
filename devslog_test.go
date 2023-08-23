@@ -12,7 +12,6 @@ import (
 )
 
 func Test_NewHandlerDefaults(t *testing.T) {
-	elementDivider = string(rune(29))
 	opts := &Options{
 		HandlerOptions: &slog.HandlerOptions{},
 	}
@@ -37,17 +36,12 @@ func Test_NewHandlerDefaults(t *testing.T) {
 	if h.mu == nil {
 		t.Errorf("Expected mutex to be initialized")
 	}
-
-	if !initialized {
-		t.Error("Expected initialized to be true")
-	}
 }
 
 func Test_NewHandlerWithOptions(t *testing.T) {
 	handlerOpts := &Options{
 		HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelWarn},
 		MaxSlicePrintSize: 10,
-		ElementDivider:    "||",
 		TimeFormat:        "[06:05]",
 	}
 	h := NewHandler(nil, handlerOpts)
@@ -62,10 +56,6 @@ func Test_NewHandlerWithOptions(t *testing.T) {
 
 	if h.opts.TimeFormat != "[06:05]" {
 		t.Errorf("Expected custom TimeFormat to be \"[06:05]\" ")
-	}
-
-	if h.opts.ElementDivider != "||" {
-		t.Errorf("Expected custom ElementDivider to be '||'")
 	}
 }
 
@@ -172,10 +162,10 @@ func Test_IsSlice(t *testing.T) {
 
 func Test_ArrayString(t *testing.T) {
 	h := NewHandler(nil, nil)
-	data := []string{"apple", "ba na na"}
+	data := []interface{}{"apple", "ba na na"}
 	expected := "\x1b[33m2\x1b[0m \x1b[32mslice[\x1b[0m\n    \x1b[32m0\x1b[0m: \x1b[34mapple\x1b[0m\n    \x1b[32m1\x1b[0m: \x1b[34mba na na\x1b[0m \x1b[32m]\x1b[0m"
 
-	result := h.arrayString(fmt.Sprintf("slice[%v%v%v]", data[0], elementDivider, data[1]), 0)
+	result := h.formatSlice(data, 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
@@ -184,9 +174,10 @@ func Test_ArrayString(t *testing.T) {
 
 func Test_ArrayStringEmpty(t *testing.T) {
 	h := NewHandler(nil, nil)
+	data := make([]interface{}, 0)
 	expected := "\x1b[33m0\x1b[0m \x1b[32mslice[]\x1b[0m"
 
-	result := h.arrayString("slice[]", 0)
+	result := h.formatSlice(data, 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
@@ -199,15 +190,14 @@ func Test_ArrayStringBig(t *testing.T) {
 	}
 
 	h := NewHandler(nil, opts)
-	slice := make([]int, 1000)
+	slice := make([]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
 		slice[i] = i + 1
 	}
 
 	expected := "\x1b[33m1000\x1b[0m \x1b[32mslice[\x1b[0m\n    \x1b[32m0\x1b[0m: \x1b[34m1\x1b[0m\n    \x1b[32m1\x1b[0m: \x1b[34m2\x1b[0m\n    \x1b[32m2\x1b[0m: \x1b[34m3\x1b[0m\n    \x1b[32m3\x1b[0m: \x1b[34m4\x1b[0m\n         \x1b[34m...\x1b[0m\x1b[32m]\x1b[0m"
 
-	attr := Slice("key", slice)
-	result := h.arrayString(attr.Value.String(), 0)
+	result := h.formatSlice(slice, 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
@@ -216,10 +206,10 @@ func Test_ArrayStringBig(t *testing.T) {
 
 func Test_MapString(t *testing.T) {
 	h := NewHandler(nil, nil)
-	data := map[string]string{"a": "1", "b": "2"}
+	data := map[string]interface{}{"a": "1", "b": "2"}
 	expected := "\x1b[33m2\x1b[0m \x1b[32mmap[\x1b[0m\n    \x1b[32ma\x1b[0m : \x1b[34m1\x1b[0m\n    \x1b[32mb\x1b[0m : \x1b[34m2\x1b[0m \x1b[32m]\x1b[0m"
 
-	result := h.mapString(fmt.Sprintf("map[%s:%s%s%s:%s]", "a", data["a"], elementDivider, "b", data["b"]), 0)
+	result := h.formatMap(data, 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
@@ -228,9 +218,10 @@ func Test_MapString(t *testing.T) {
 
 func Test_MapStringEmpty(t *testing.T) {
 	h := NewHandler(nil, nil)
+	data := make(map[string]interface{}, 0)
 	expected := "\x1b[33m0\x1b[0m \x1b[32mmap[]\x1b[0m"
 
-	result := h.mapString("map[]", 0)
+	result := h.formatMap(data, 0)
 
 	if result != expected {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
@@ -359,19 +350,18 @@ func Test_WholeOutput(t *testing.T) {
 		slog.Any("boolean", true),
 		slog.Any("time", time.Date(2012, time.March, 28, 0, 0, 0, 0, time.UTC)),
 		slog.Any("duration", time.Second),
-		Map("map", mapString),
 		slog.Any("map", mapString),
-		Map("empty_map", emptyMap),
-		Slice("slice", sliceSmall),
-		Slice("slice_big", sliceBig),
-		Slice("empty_slice", emptySlice),
+		slog.Any("empty_map", emptyMap),
+		slog.Any("slice", sliceSmall),
+		slog.Any("slice_big", sliceBig),
+		slog.Any("empty_slice", emptySlice),
 		slog.Group("my_group",
 			slog.Any("int", 1),
 			slog.Any("float", 1.21),
 		),
 	)
 
-	expected := fmt.Sprintf("%[1]v \x1b[30m\x1b[42m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n  \x1b[35mattr\x1b[0m       : string\n\x1b[32mG\x1b[0m \x1b[35mwith_group\x1b[0m : \x1b[32mgroup\x1b[0m\n  \x1b[31m#\x1b[0m \x1b[35mboolean\x1b[0m     : \x1b[31mtrue\x1b[0m\n  \x1b[36m@\x1b[0m \x1b[35mduration\x1b[0m    : \x1b[36m1s\x1b[0m\n    \x1b[35mempty\x1b[0m       : \x1b[37m\x1b[2mempty\x1b[0m\n  \x1b[32mM\x1b[0m \x1b[35mempty_map\x1b[0m   : \x1b[33m0\x1b[0m \x1b[32mmap[]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mempty_slice\x1b[0m : \x1b[33m0\x1b[0m \x1b[32mslice[]\x1b[0m\n  \x1b[32mM\x1b[0m \x1b[35mmap\x1b[0m         : \x1b[33m2\x1b[0m \x1b[32mmap[\x1b[0m\n      \x1b[32mapple\x1b[0m    : \x1b[34mpear\x1b[0m\n      \x1b[32mba na na\x1b[0m : \x1b[34mman go\x1b[0m \x1b[32m]\x1b[0m\n    \x1b[35mmap\x1b[0m         : map[apple:pear ba na na:man go]\n  \x1b[32mS\x1b[0m \x1b[35mslice\x1b[0m       : \x1b[33m2\x1b[0m \x1b[32mslice[\x1b[0m\n      \x1b[32m0\x1b[0m: \x1b[34mdsa\x1b[0m\n      \x1b[32m1\x1b[0m: \x1b[34mba na na\x1b[0m \x1b[32m]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mslice_big\x1b[0m   : \x1b[33m1000\x1b[0m \x1b[32mslice[\x1b[0m\n      \x1b[32m0\x1b[0m: \x1b[34m1\x1b[0m\n      \x1b[32m1\x1b[0m: \x1b[34m2\x1b[0m\n      \x1b[32m2\x1b[0m: \x1b[34m3\x1b[0m\n      \x1b[32m3\x1b[0m: \x1b[34m4\x1b[0m\n           \x1b[34m...\x1b[0m\x1b[32m]\x1b[0m\n    \x1b[35mtest_string\x1b[0m : some string\n  \x1b[36m@\x1b[0m \x1b[35mtime\x1b[0m        : \x1b[36m2012-03-28 00:00:00 +0000 UTC\x1b[0m\n  \x1b[34m*\x1b[0m \x1b[35murl\x1b[0m         : \x1b[34mhttps://go.dev/\x1b[0m\n  \x1b[32mG\x1b[0m \x1b[35mmy_group\x1b[0m    : \x1b[32mgroup\x1b[0m\n    \x1b[33m#\x1b[0m \x1b[35mfloat\x1b[0m : \x1b[33m1.21\x1b[0m\n    \x1b[33m#\x1b[0m \x1b[35mint\x1b[0m   : \x1b[33m1\x1b[0m\n\n", timeString)
+	expected := fmt.Sprintf("%[1]v \x1b[30m\x1b[42m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n  \x1b[35mattr\x1b[0m       : string\n\x1b[32mG\x1b[0m \x1b[35mwith_group\x1b[0m : \x1b[32mgroup\x1b[0m\n  \x1b[31m#\x1b[0m \x1b[35mboolean\x1b[0m     : \x1b[31mtrue\x1b[0m\n  \x1b[36m@\x1b[0m \x1b[35mduration\x1b[0m    : \x1b[36m1s\x1b[0m\n    \x1b[35mempty\x1b[0m       : \x1b[37m\x1b[2mempty\x1b[0m\n  \x1b[32mM\x1b[0m \x1b[35mempty_map\x1b[0m   : \x1b[33m0\x1b[0m \x1b[32mmap[]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mempty_slice\x1b[0m : \x1b[33m0\x1b[0m \x1b[32mslice[]\x1b[0m\n  \x1b[32mM\x1b[0m \x1b[35mmap\x1b[0m         : \x1b[33m2\x1b[0m \x1b[32mmap[\x1b[0m\n      \x1b[32mapple\x1b[0m    : \x1b[34mpear\x1b[0m\n      \x1b[32mba na na\x1b[0m : \x1b[34mman go\x1b[0m \x1b[32m]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mslice\x1b[0m       : \x1b[33m2\x1b[0m \x1b[32mslice[\x1b[0m\n      \x1b[32m0\x1b[0m: \x1b[34mdsa\x1b[0m\n      \x1b[32m1\x1b[0m: \x1b[34mba na na\x1b[0m \x1b[32m]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mslice_big\x1b[0m   : \x1b[33m1000\x1b[0m \x1b[32mslice[\x1b[0m\n      \x1b[32m0\x1b[0m: \x1b[34m1\x1b[0m\n      \x1b[32m1\x1b[0m: \x1b[34m2\x1b[0m\n      \x1b[32m2\x1b[0m: \x1b[34m3\x1b[0m\n      \x1b[32m3\x1b[0m: \x1b[34m4\x1b[0m\n           \x1b[34m...\x1b[0m\x1b[32m]\x1b[0m\n    \x1b[35mtest_string\x1b[0m : some string\n  \x1b[36m@\x1b[0m \x1b[35mtime\x1b[0m        : \x1b[36m2012-03-28 00:00:00 +0000 UTC\x1b[0m\n  \x1b[34m*\x1b[0m \x1b[35murl\x1b[0m         : \x1b[34mhttps://go.dev/\x1b[0m\n  \x1b[32mG\x1b[0m \x1b[35mmy_group\x1b[0m    : \x1b[32mgroup\x1b[0m\n    \x1b[33m#\x1b[0m \x1b[35mfloat\x1b[0m : \x1b[33m1.21\x1b[0m\n    \x1b[33m#\x1b[0m \x1b[35mint\x1b[0m   : \x1b[33m1\x1b[0m\n\n", timeString)
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)

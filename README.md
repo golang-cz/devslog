@@ -100,37 +100,8 @@ slog.SetDefault(logger)
 ```
 
 ## Options
-| Parameter         | Description                                                                                                                                                        | Default          | Value  |
-|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|--------|
-| MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice.                                                                                                     | 50               | uint   |
-| SortKeys          | Determines if attributes should be sorted by keys.                                                                                                                 | false            | bool   |
-| TimeFormat        | Time format for timestamp.                                                                                                                                         | "[15:06:05]"     | string |
-| ElementDivider    | Global variable. Character used to separate elements in slices and maps.  While change is possible, the default 'Group separator' (ASCII code 29)  is recommended. | string(rune(29)) | string |
-
-## Custom functions
-If `devslog` is not initialized, these functions simply pass the arguments to `slog.Any()`, ensuring no modification to the output when they are used in production environment.
-
-### `Slice()`
-Instead of relying on `slog.Any()`, you have the option to directly pass a slice of basic types, resulting in cleaner and formatted output. This approach enhances the readability of your logs. It uses `ElementDivider` for identifying single elements.
-```go
-sampleSlice := []string{"dsa", "ba na na"}
-
-slog.Info(
-	"some message",
-	devslog.Slice("slice", sampleSlice),
-)
-```
-
-### `Map()`
-Similar to `Slice()`, you can pass a map of basic types.
-```go
-sampleMap := map[string]string{
-	"apple":    "pear",
-	"ba na na": "man go",
-}
-
-slog.Info(
-	"some message",
-	devslog.Map("map", sampleMap),
-)
-```
+| Parameter         | Description                                                    | Default      | Value  |
+|-------------------|----------------------------------------------------------------|--------------|--------|
+| MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice. | 50           | uint   |
+| SortKeys          | Determines if attributes should be sorted by keys.             | false        | bool   |
+| TimeFormat        | Time format for timestamp.                                     | "[15:06:05]" | string |
