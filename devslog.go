@@ -233,6 +233,13 @@ func (h *developHandler) colorize(buf []byte, as attributes, level int, groups [
 			val = cs(val, fgCyan)
 		case slog.KindAny:
 			a := a.Value.Any()
+			err, isError := a.(error)
+			if isError {
+				mark = cs("E", fgRed)
+				val = csb(fmt.Sprintf(" %v ", err), fgBlack, bgRed)
+				break
+			}
+
 			jsonBytes, err := json.Marshal(a)
 			if err != nil {
 				break
