@@ -2,6 +2,7 @@ package devslog
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,11 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-)
-
-var (
-	elementDivider = string(rune(29))
-	initialized    bool
 )
 
 type developHandler struct {
@@ -37,12 +33,6 @@ type Options struct {
 
 	// Time format for timestamp, default format is "[15:06:05]"
 	TimeFormat string
-
-	// Character for splitting elements in slices.
-	// Default is 'Group separator' - ASCII code 29.
-	// This is used, when logging slice with Slice() function.
-	// I don't recommend to change this value!
-	ElementDivider string
 }
 
 type groupOrAttrs struct {
@@ -72,10 +62,6 @@ func NewHandler(out io.Writer, opts *Options) *developHandler {
 			h.opts.MaxSlicePrintSize = 50
 		}
 
-		if opts.ElementDivider != "" {
-			elementDivider = opts.ElementDivider
-		}
-
 		if opts.TimeFormat == "" {
 			h.opts.TimeFormat = "[15:06:05]"
 		}
@@ -86,8 +72,6 @@ func NewHandler(out io.Writer, opts *Options) *developHandler {
 			TimeFormat:        "[15:06:05]",
 		}
 	}
-
-	initialized = true
 
 	return h
 }
@@ -244,17 +228,34 @@ func (h *developHandler) colorize(buf []byte, as attributes, level int, groups [
 			} else if isURL(val) {
 				mark = cs("*", fgBlue)
 				val = cs(val, fgBlue)
-			} else if isSlice(val) {
-				mark = cs("S", fgGreen)
-				val = h.arrayString(val, level)
-			} else if isMap(val) {
-				mark = cs("M", fgGreen)
-				val = h.mapString(val, level)
 			}
 		case slog.KindTime, slog.KindDuration:
 			mark = cs("@", fgCyan)
 			val = cs(val, fgCyan)
 		case slog.KindAny:
+			a := a.Value.Any()
+			jsonBytes, err := json.Marshal(a)
+			if err != nil {
+				break
+			}
+
+			var decodedData interface{}
+			err = json.Unmarshal(jsonBytes, &decodedData)
+			if err != nil {
+				break
+			}
+
+			switch decoded := decodedData.(type) {
+			case []interface{}:
+				mark = cs("S", fgGreen)
+				val = h.formatSlice(decoded, level)
+			case map[string]interface{}:
+				mark = cs("M", fgGreen)
+				val = h.formatMap(decoded, level)
+			default:
+				fmt.Println("Unknown type")
+			}
+
 		case slog.KindGroup:
 			mark = cs("G", fgGreen)
 			var groupAttrs attributes
@@ -285,31 +286,28 @@ func isMap(s string) bool {
 	return strings.HasPrefix(s, "map[") && strings.HasSuffix(s, "]")
 }
 
-// Splitting is done by ElementDivider
-func (h *developHandler) arrayString(s string, l int) string {
-	s = strings.TrimPrefix(s, "slice[")
-	s = strings.TrimSuffix(s, "]")
+// Splitting is done by SliceElementDivider
+func (h *developHandler) formatSlice(s []interface{}, l int) string {
 	if len(s) == 0 {
 		return fmt.Sprintf("%v %v", cs("0", fgYellow), cs("slice[]", fgGreen))
 	}
 
-	sl := strings.Split(s, string(elementDivider))
-	length := cs(strconv.Itoa(len(sl)), fgYellow)
-	digits := len(strconv.Itoa(len(sl)))
+	length := cs(strconv.Itoa(len(s)), fgYellow)
+	digits := len(strconv.Itoa(len(s)))
 	if digits > 3 {
 		digits = 3
 	}
 
 	elementColor := fgBlue
 	res := fmt.Sprintf("%s %s", length, cs("slice[", fgGreen))
-	for i, e := range sl {
+	for i, e := range s {
 		if i == int(h.opts.MaxSlicePrintSize) {
 			res += fmt.Sprintf("\n%*v%*s  %s%s", l*2+4, "", digits, "", cs("...", elementColor), cs("]", fgGreen))
 			break
 		}
 
-		res += fmt.Sprintf("\n%*v%*s: %s", l*2+4, "", digits, cs(strconv.Itoa(i), fgGreen), cs(e, elementColor))
-		if i == len(sl)-1 {
+		res += fmt.Sprintf("\n%*v%*s: %s", l*2+4, "", digits, cs(strconv.Itoa(i), fgGreen), cs(fmt.Sprint(e), elementColor))
+		if i == len(s)-1 {
 			res += fmt.Sprintf(" %s", cs("]", fgGreen))
 		}
 	}
@@ -317,40 +315,25 @@ func (h *developHandler) arrayString(s string, l int) string {
 	return res
 }
 
-// Splitting is done by ElementDivider,
-func (h *developHandler) mapString(s string, level int) string {
-	s = strings.TrimPrefix(s, "map[")
-	s = strings.TrimSuffix(s, "]")
+// Splitting is done by SliceElementDivider,
+func (h *developHandler) formatMap(s map[string]interface{}, level int) string {
 	if len(s) == 0 {
 		return fmt.Sprintf("%v %v", cs("0", fgYellow), cs("map[]", fgGreen))
 	}
 
-	pairs := strings.Split(s, elementDivider)
-	resultMap := make(map[string]string)
-
-	for _, pair := range pairs {
-		keyVal := strings.Split(pair, ":")
-		if len(keyVal) == 2 {
-			key := strings.TrimSpace(keyVal[0])
-			val := strings.TrimSpace(keyVal[1])
-			resultMap[key] = val
-		}
-	}
-
 	var padding int
-	for key := range resultMap {
+	for key := range s {
 		color := len(cs(key, fgGreen))
 		if color > padding {
 			padding = color
 		}
 	}
 
-	sortedKeys := sortDataMap(resultMap)
+	sortedKeys := sortDataMap(s)
 	length := cs(strconv.Itoa(len(sortedKeys)), fgYellow)
-
 	res := fmt.Sprintf("%s %s", length, cs("map[", fgGreen))
 	for i, key := range sortedKeys {
-		res += fmt.Sprintf("\n%*v%-*s : %s", level*2+4, "", padding, cs(key, fgGreen), cs(resultMap[key], fgBlue))
+		res += fmt.Sprintf("\n%*v%-*s : %s", level*2+4, "", padding, cs(key, fgGreen), cs(fmt.Sprint(s[key]), fgBlue))
 		if i == len(sortedKeys)-1 {
 			res += fmt.Sprintf(" %s", cs("]", fgGreen))
 		}
@@ -359,7 +342,7 @@ func (h *developHandler) mapString(s string, level int) string {
 	return res
 }
 
-func sortDataMap(data map[string]string) []string {
+func sortDataMap(data map[string]interface{}) []string {
 	keys := make([]string, 0, len(data))
 	for key := range data {
 		keys = append(keys, key)
