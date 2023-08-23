@@ -16,7 +16,7 @@ func (a attributes) Less(i, j int) bool {
 	return a[i].Key < a[j].Key
 }
 
-func (a attributes) padding(c color) int {
+func (a attributes) padding(c foregroundColor) int {
 	var padding int
 	for _, e := range a {
 		color := len(cs(e.Key, c))
