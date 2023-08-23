@@ -132,8 +132,8 @@ func (h *developHandler) formatSourceInfo(buf []byte, r *slog.Record) []byte {
 }
 
 func (h *developHandler) levelMessage(buf []byte, r *slog.Record) []byte {
-	var bgColor color
-	var fgColor color
+	var bgColor backgroundColor
+	var fgColor foregroundColor
 	var lvlStr string
 	if h.opts.ReplaceAttr != nil {
 		a := h.opts.ReplaceAttr(nil, slog.Any(slog.LevelKey, r.Level))
