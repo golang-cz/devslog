@@ -134,7 +134,6 @@ func (h *developHandler) formatSourceInfo(buf []byte, r *slog.Record) []byte {
 func (h *developHandler) levelMessage(buf []byte, r *slog.Record) []byte {
 	var bgColor color
 	var fgColor color
-
 	var lvlStr string
 	if h.opts.ReplaceAttr != nil {
 		a := h.opts.ReplaceAttr(nil, slog.Any(slog.LevelKey, r.Level))
@@ -252,10 +251,7 @@ func (h *developHandler) colorize(buf []byte, as attributes, level int, groups [
 			case map[string]interface{}:
 				mark = cs("M", fgGreen)
 				val = h.formatMap(decoded, level)
-			default:
-				fmt.Println("Unknown type")
 			}
-
 		case slog.KindGroup:
 			mark = cs("G", fgGreen)
 			var groupAttrs attributes
