@@ -6,7 +6,7 @@
 `devslog` is zero dependency custom logging handler for Go's standard [`log/slog`](https://pkg.go.dev/log/slog) package that provides structured logging with colorful and indented structure for developing.
 
 ### Develop with this output
-![image](https://github.com/golang-cz/devslog/assets/17728576/be0eca2c-192b-442f-b3c0-eecef107871a)
+![image](https://github.com/golang-cz/devslog/assets/17728576/0bae7ec7-0513-41a4-9682-0e0fc74747e7)
 
 ### Instead of these outputs
 `TextHandler`
