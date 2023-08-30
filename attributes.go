@@ -19,7 +19,7 @@ func (a attributes) Less(i, j int) bool {
 func (a attributes) padding(c foregroundColor) int {
 	var padding int
 	for _, e := range a {
-		color := len(cs(e.Key, c))
+		color := len(cs([]byte(e.Key), c))
 		if color > padding {
 			padding = color
 		}
