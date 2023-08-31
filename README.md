@@ -6,13 +6,14 @@
 `devslog` is zero dependency custom logging handler for Go's standard [`log/slog`](https://pkg.go.dev/log/slog) package that provides structured logging with colorful and indented structure for developing.
 
 ### Develop with this output
-![image](https://github.com/golang-cz/devslog/assets/17728576/0bae7ec7-0513-41a4-9682-0e0fc74747e7)
+![image](https://github.com/golang-cz/devslog/assets/17728576/cfdc1634-16fe-4dd0-a643-21bf519cd4fe)
 
 ### Instead of these outputs
 `TextHandler`
-![image](https://github.com/golang-cz/devslog/assets/17728576/856f7e34-dc72-4f22-bd47-9fd5cbf7dd2f)
+![image](https://github.com/golang-cz/devslog/assets/17728576/49aab1c0-93ba-409d-8637-a96eeeaaf0e1)
+
 `JSONHandler`
-![image](https://github.com/golang-cz/devslog/assets/17728576/3d4b091d-813a-461d-88e1-4cc95b9d6939)
+![image](https://github.com/golang-cz/devslog/assets/17728576/775af693-2f96-47e8-9190-5ead77b41a27)
 
 ## Install
 ```
@@ -26,7 +27,7 @@ w := os.Stdout
 
 logger := slog.New(devslog.NewHandler(w, nil))
 
-// set global logger
+// optional: set global logger
 slog.SetDefault(logger)
 ```
 
