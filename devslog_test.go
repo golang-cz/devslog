@@ -11,7 +11,67 @@ import (
 	"time"
 )
 
-func Test_NewHandlerDefaults(t *testing.T) {
+func Test_NewHandler(t *testing.T) {
+	test_NewHandlerDefaults(t)
+	test_NewHandlerWithOptions(t)
+	test_NewHandlerWithNilOptions(t)
+	test_NewHandlerWithNilSlogHandlerOptions(t)
+}
+
+func Test_Methods(t *testing.T) {
+	test_Enabled(t)
+	test_WithGroup(t)
+	test_WithGroupEmpty(t)
+	test_WithAttrs(t)
+	test_WithAttrsEmpty(t)
+}
+
+func Test_Levels(t *testing.T) {
+	test_LevelMessageDebug(t)
+	test_LevelMessageInfo(t)
+	test_LevelMessageWarn(t)
+	test_LevelMessageError(t)
+}
+
+func Test_GroupsAndAttributes(t *testing.T) {
+	test_WithGroups(t)
+	test_WithGroupsEmpty(t)
+	test_WithAttributes(t)
+}
+
+func Test_SourceAndReplace(t *testing.T) {
+	test_Source(t)
+	test_ReplaceLevelAttributes(t)
+}
+
+func Test_Types(t *testing.T) {
+	slogOpts := &slog.HandlerOptions{
+		AddSource:   false,
+		Level:       slog.LevelDebug,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr { return a },
+	}
+
+	opts := &Options{
+		HandlerOptions:    slogOpts,
+		MaxSlicePrintSize: 4,
+		SortKeys:          true,
+		TimeFormat:        "[]",
+	}
+
+	test_String(t, opts)
+	test_IntFloat(t, opts)
+	test_Bool(t, opts)
+	test_Time(t, opts)
+	test_Error(t, opts)
+	test_Slice(t, opts)
+	test_SliceBig(t, opts)
+	test_Map(t, opts)
+	test_MapOfPointers(t, opts)
+	test_Struct(t, opts)
+	test_Group(t, opts)
+}
+
+func test_NewHandlerDefaults(t *testing.T) {
 	opts := &Options{
 		HandlerOptions: &slog.HandlerOptions{},
 	}
@@ -38,7 +98,7 @@ func Test_NewHandlerDefaults(t *testing.T) {
 	}
 }
 
-func Test_NewHandlerWithOptions(t *testing.T) {
+func test_NewHandlerWithOptions(t *testing.T) {
 	handlerOpts := &Options{
 		HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelWarn},
 		MaxSlicePrintSize: 10,
@@ -59,7 +119,7 @@ func Test_NewHandlerWithOptions(t *testing.T) {
 	}
 }
 
-func Test_NewHandlerWithNilOptions(t *testing.T) {
+func test_NewHandlerWithNilOptions(t *testing.T) {
 	h := NewHandler(nil, nil)
 
 	if h.opts.HandlerOptions == nil || h.opts.HandlerOptions.Level != slog.LevelInfo {
@@ -75,7 +135,24 @@ func Test_NewHandlerWithNilOptions(t *testing.T) {
 	}
 }
 
-func Test_Enabled(t *testing.T) {
+func test_NewHandlerWithNilSlogHandlerOptions(t *testing.T) {
+	opts := &Options{}
+	h := NewHandler(nil, opts)
+
+	if h.opts.HandlerOptions == nil || h.opts.HandlerOptions.Level != slog.LevelInfo {
+		t.Errorf("Expected HandlerOptions to be initialized with default level")
+	}
+
+	if h.opts.MaxSlicePrintSize != 50 {
+		t.Errorf("Expected MaxSlicePrintSize to be initialized with default value")
+	}
+
+	if h.out != nil {
+		t.Errorf("Expected writer to be nil")
+	}
+}
+
+func test_Enabled(t *testing.T) {
 	h := NewHandler(nil, nil)
 	ctx := context.Background()
 
@@ -88,7 +165,7 @@ func Test_Enabled(t *testing.T) {
 	}
 }
 
-func Test_WithGroup(t *testing.T) {
+func test_WithGroup(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithGroup("myGroup")
 
@@ -97,7 +174,7 @@ func Test_WithGroup(t *testing.T) {
 	}
 }
 
-func Test_WithGroupEmpty(t *testing.T) {
+func test_WithGroupEmpty(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithGroup("")
 
@@ -106,7 +183,7 @@ func Test_WithGroupEmpty(t *testing.T) {
 	}
 }
 
-func Test_WithAttrs(t *testing.T) {
+func test_WithAttrs(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithAttrs([]slog.Attr{slog.String("key", "value")})
 
@@ -115,7 +192,7 @@ func Test_WithAttrs(t *testing.T) {
 	}
 }
 
-func Test_WithAttrsEmpty(t *testing.T) {
+func test_WithAttrsEmpty(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithAttrs([]slog.Attr{})
 
@@ -124,111 +201,7 @@ func Test_WithAttrsEmpty(t *testing.T) {
 	}
 }
 
-func Test_IsURL(t *testing.T) {
-	urlString := "https://www.example.com"
-	if !isURL(urlString) {
-		t.Errorf("Expected URL to be recognized as URL: %s", urlString)
-	}
-
-	nonURLString := "not-a-valid-url"
-	if isURL(nonURLString) {
-		t.Errorf("Expected non-URL string to not be recognized as URL: %s", nonURLString)
-	}
-}
-
-func Test_IsMap(t *testing.T) {
-	mapString := "map[key:value]"
-	if !isMap(mapString) {
-		t.Errorf("Expected string to be recognized as map: %s", mapString)
-	}
-
-	nonMapString := "not-a-valid-map"
-	if isMap(nonMapString) {
-		t.Errorf("Expected non-map string to not be recognized as map: %s", nonMapString)
-	}
-}
-
-func Test_IsSlice(t *testing.T) {
-	sliceString := "slice[1 2 3]"
-	if !isSlice(sliceString) {
-		t.Errorf("Expected string to be recognized as slice: %s", sliceString)
-	}
-
-	nonSliceString := "not-a-valid-slice"
-	if isSlice(nonSliceString) {
-		t.Errorf("Expected non-slice string to not be recognized as slice: %s", nonSliceString)
-	}
-}
-
-func Test_ArrayString(t *testing.T) {
-	h := NewHandler(nil, nil)
-	data := []interface{}{"apple", "ba na na"}
-	expected := "\x1b[33m2\x1b[0m \x1b[32mslice[\x1b[0m\n    \x1b[32m0\x1b[0m: \x1b[34mapple\x1b[0m\n    \x1b[32m1\x1b[0m: \x1b[34mba na na\x1b[0m \x1b[32m]\x1b[0m"
-
-	result := h.formatSlice(data, 0)
-
-	if result != expected {
-		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
-	}
-}
-
-func Test_ArrayStringEmpty(t *testing.T) {
-	h := NewHandler(nil, nil)
-	data := make([]interface{}, 0)
-	expected := "\x1b[33m0\x1b[0m \x1b[32mslice[]\x1b[0m"
-
-	result := h.formatSlice(data, 0)
-
-	if result != expected {
-		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
-	}
-}
-
-func Test_ArrayStringBig(t *testing.T) {
-	opts := &Options{
-		MaxSlicePrintSize: 4,
-	}
-
-	h := NewHandler(nil, opts)
-	slice := make([]interface{}, 1000)
-	for i := 0; i < 1000; i++ {
-		slice[i] = i + 1
-	}
-
-	expected := "\x1b[33m1000\x1b[0m \x1b[32mslice[\x1b[0m\n    \x1b[32m0\x1b[0m: \x1b[34m1\x1b[0m\n    \x1b[32m1\x1b[0m: \x1b[34m2\x1b[0m\n    \x1b[32m2\x1b[0m: \x1b[34m3\x1b[0m\n    \x1b[32m3\x1b[0m: \x1b[34m4\x1b[0m\n         \x1b[34m...\x1b[0m\x1b[32m]\x1b[0m"
-
-	result := h.formatSlice(slice, 0)
-
-	if result != expected {
-		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
-	}
-}
-
-func Test_MapString(t *testing.T) {
-	h := NewHandler(nil, nil)
-	data := map[string]interface{}{"a": "1", "b": "2"}
-	expected := "\x1b[33m2\x1b[0m \x1b[32mmap[\x1b[0m\n    \x1b[32ma\x1b[0m : \x1b[34m1\x1b[0m\n    \x1b[32mb\x1b[0m : \x1b[34m2\x1b[0m \x1b[32m]\x1b[0m"
-
-	result := h.formatMap(data, 0)
-
-	if result != expected {
-		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
-	}
-}
-
-func Test_MapStringEmpty(t *testing.T) {
-	h := NewHandler(nil, nil)
-	data := make(map[string]interface{}, 0)
-	expected := "\x1b[33m0\x1b[0m \x1b[32mmap[]\x1b[0m"
-
-	result := h.formatMap(data, 0)
-
-	if result != expected {
-		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, result)
-	}
-}
-
-func Test_LevelMessageDebug(t *testing.T) {
+func test_LevelMessageDebug(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -238,7 +211,7 @@ func Test_LevelMessageDebug(t *testing.T) {
 
 	buf = h.levelMessage(buf, record)
 
-	expected := "\x1b[30m\x1b[44m DEBUG \x1b[0m \x1b[34mDebug message\x1b[0m\n"
+	expected := "\x1b[44m\x1b[30m DEBUG \x1b[0m \x1b[34mDebug message\x1b[0m\n"
 	result := string(buf)
 
 	if result != expected {
@@ -246,7 +219,7 @@ func Test_LevelMessageDebug(t *testing.T) {
 	}
 }
 
-func Test_LevelMessageInfo(t *testing.T) {
+func test_LevelMessageInfo(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -256,7 +229,7 @@ func Test_LevelMessageInfo(t *testing.T) {
 
 	buf = h.levelMessage(buf, record)
 
-	expected := "\x1b[30m\x1b[42m INFO \x1b[0m \x1b[32mInfo message\x1b[0m\n"
+	expected := "\x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mInfo message\x1b[0m\n"
 	result := string(buf)
 
 	if result != expected {
@@ -264,7 +237,7 @@ func Test_LevelMessageInfo(t *testing.T) {
 	}
 }
 
-func Test_LevelMessageWarn(t *testing.T) {
+func test_LevelMessageWarn(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -274,7 +247,7 @@ func Test_LevelMessageWarn(t *testing.T) {
 
 	buf = h.levelMessage(buf, record)
 
-	expected := "\x1b[30m\x1b[43m WARN \x1b[0m \x1b[33mWarning message\x1b[0m\n"
+	expected := "\x1b[43m\x1b[30m WARN \x1b[0m \x1b[33mWarning message\x1b[0m\n"
 	result := string(buf)
 
 	if result != expected {
@@ -282,7 +255,7 @@ func Test_LevelMessageWarn(t *testing.T) {
 	}
 }
 
-func Test_LevelMessageError(t *testing.T) {
+func test_LevelMessageError(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -292,7 +265,7 @@ func Test_LevelMessageError(t *testing.T) {
 
 	buf = h.levelMessage(buf, record)
 
-	expected := "\x1b[30m\x1b[41m ERROR \x1b[0m \x1b[31mError message\x1b[0m\n"
+	expected := "\x1b[41m\x1b[30m ERROR \x1b[0m \x1b[31mError message\x1b[0m\n"
 	result := string(buf)
 
 	if result != expected {
@@ -309,66 +282,7 @@ type MockWriter struct {
 	WrittenData []byte
 }
 
-func Test_WholeOutput(t *testing.T) {
-	w := &MockWriter{}
-
-	slogOpts := &slog.HandlerOptions{
-		AddSource:   false,
-		Level:       slog.LevelDebug,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr { return a },
-	}
-
-	opts := &Options{
-		HandlerOptions:    slogOpts,
-		MaxSlicePrintSize: 4,
-		SortKeys:          true,
-		TimeFormat:        "[15:06]",
-	}
-
-	logger := slog.New(NewHandler(w, opts).WithAttrs([]slog.Attr{slog.String("attr", "string")}).WithGroup("with_group"))
-
-	mapString := map[string]string{
-		"apple":    "pear",
-		"ba na na": "man go",
-	}
-
-	sliceSmall := []string{"dsa", "ba na na"}
-	sliceBig := make([]int, 1000)
-	for i := 0; i < 1000; i++ {
-		sliceBig[i] = i + 1
-	}
-
-	emptySlice := make([]int, 0)
-	emptyMap := make(map[int]int, 0)
-
-	timeString := csf(time.Now().Format("[15:06]"), fgWhite)
-	logger.Info(
-		"My INFO message",
-		slog.String("test_string", "some string"),
-		slog.String("empty", ""),
-		slog.String("url", "https://go.dev/"),
-		slog.Any("boolean", true),
-		slog.Any("time", time.Date(2012, time.March, 28, 0, 0, 0, 0, time.UTC)),
-		slog.Any("duration", time.Second),
-		slog.Any("map", mapString),
-		slog.Any("empty_map", emptyMap),
-		slog.Any("slice", sliceSmall),
-		slog.Any("slice_big", sliceBig),
-		slog.Any("empty_slice", emptySlice),
-		slog.Group("my_group",
-			slog.Any("int", 1),
-			slog.Any("float", 1.21),
-		),
-	)
-
-	expected := fmt.Sprintf("%[1]v \x1b[30m\x1b[42m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n  \x1b[35mattr\x1b[0m       : string\n\x1b[32mG\x1b[0m \x1b[35mwith_group\x1b[0m : \x1b[32mgroup\x1b[0m\n  \x1b[31m#\x1b[0m \x1b[35mboolean\x1b[0m     : \x1b[31mtrue\x1b[0m\n  \x1b[36m@\x1b[0m \x1b[35mduration\x1b[0m    : \x1b[36m1s\x1b[0m\n    \x1b[35mempty\x1b[0m       : \x1b[37m\x1b[2mempty\x1b[0m\n  \x1b[32mM\x1b[0m \x1b[35mempty_map\x1b[0m   : \x1b[33m0\x1b[0m \x1b[32mmap[]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mempty_slice\x1b[0m : \x1b[33m0\x1b[0m \x1b[32mslice[]\x1b[0m\n  \x1b[32mM\x1b[0m \x1b[35mmap\x1b[0m         : \x1b[33m2\x1b[0m \x1b[32mmap[\x1b[0m\n      \x1b[32mapple\x1b[0m    : \x1b[34mpear\x1b[0m\n      \x1b[32mba na na\x1b[0m : \x1b[34mman go\x1b[0m \x1b[32m]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mslice\x1b[0m       : \x1b[33m2\x1b[0m \x1b[32mslice[\x1b[0m\n      \x1b[32m0\x1b[0m: \x1b[34mdsa\x1b[0m\n      \x1b[32m1\x1b[0m: \x1b[34mba na na\x1b[0m \x1b[32m]\x1b[0m\n  \x1b[32mS\x1b[0m \x1b[35mslice_big\x1b[0m   : \x1b[33m1000\x1b[0m \x1b[32mslice[\x1b[0m\n      \x1b[32m0\x1b[0m: \x1b[34m1\x1b[0m\n      \x1b[32m1\x1b[0m: \x1b[34m2\x1b[0m\n      \x1b[32m2\x1b[0m: \x1b[34m3\x1b[0m\n      \x1b[32m3\x1b[0m: \x1b[34m4\x1b[0m\n           \x1b[34m...\x1b[0m\x1b[32m]\x1b[0m\n    \x1b[35mtest_string\x1b[0m : some string\n  \x1b[36m@\x1b[0m \x1b[35mtime\x1b[0m        : \x1b[36m2012-03-28 00:00:00 +0000 UTC\x1b[0m\n  \x1b[34m*\x1b[0m \x1b[35murl\x1b[0m         : \x1b[34mhttps://go.dev/\x1b[0m\n  \x1b[32mG\x1b[0m \x1b[35mmy_group\x1b[0m    : \x1b[32mgroup\x1b[0m\n    \x1b[33m#\x1b[0m \x1b[35mfloat\x1b[0m : \x1b[33m1.21\x1b[0m\n    \x1b[33m#\x1b[0m \x1b[35mint\x1b[0m   : \x1b[33m1\x1b[0m\n\n", timeString)
-
-	if !bytes.Equal(w.WrittenData, []byte(expected)) {
-		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
-	}
-}
-
-func Test_EmptyLogs(t *testing.T) {
+func test_Source(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -386,24 +300,18 @@ func Test_EmptyLogs(t *testing.T) {
 
 	logger := slog.New(NewHandler(w, opts))
 
-	timeString := csf(time.Now().Format("[15:06]"), fgWhite)
-	_, filename, l1, _ := runtime.Caller(0)
-	logger.Debug("My DEBUG message")
-	_, _, l2, _ := runtime.Caller(0)
-	logger.Info("My INFO message")
-	_, _, l3, _ := runtime.Caller(0)
-	logger.Warn("My WARN message")
-	_, _, l4, _ := runtime.Caller(0)
-	logger.Error("My ERROR message")
+	timeString := csf([]byte(time.Now().Format("[15:06]")), fgWhite)
+	_, filename, l, _ := runtime.Caller(0)
+	logger.Info("message")
 
-	expected := fmt.Sprintf("%[1]v \x1b[34m@@@\x1b[0m \x1b[4m\x1b[33m%[2]s\x1b[0m\x1b[0m:\x1b[31m%[3]v\x1b[0m\n\x1b[30m\x1b[44m DEBUG \x1b[0m \x1b[34mMy DEBUG message\x1b[0m\n\n%[1]v \x1b[34m@@@\x1b[0m \x1b[4m\x1b[33m%[2]v\x1b[0m\x1b[0m:\x1b[31m%[4]v\x1b[0m\n\x1b[30m\x1b[42m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n\n%[1]v \x1b[34m@@@\x1b[0m \x1b[4m\x1b[33m%[2]v\x1b[0m\x1b[0m:\x1b[31m%[5]v\x1b[0m\n\x1b[30m\x1b[43m WARN \x1b[0m \x1b[33mMy WARN message\x1b[0m\n\n%[1]v \x1b[34m@@@\x1b[0m \x1b[4m\x1b[33m%[2]v\x1b[0m\x1b[0m:\x1b[31m%[6]v\x1b[0m\n\x1b[30m\x1b[41m ERROR \x1b[0m \x1b[31mMy ERROR message\x1b[0m\n\n", timeString, filename, l1+1, l2+1, l3+1, l4+1)
+	expected := fmt.Sprintf("%1s \x1b[34m@@@\x1b[0m \x1b[4m\x1b[33m%2s\x1b[0m\x1b[0m:\x1b[31m%v\x1b[0m\n\x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmessage\x1b[0m\n\n", timeString, filename, l+1)
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
 
-func Test_WithGroups(t *testing.T) {
+func test_WithGroups(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -415,15 +323,69 @@ func Test_WithGroups(t *testing.T) {
 		HandlerOptions:    slogOpts,
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
-		TimeFormat:        "[15:06]",
+		TimeFormat:        "[]",
 	}
 
 	logger := slog.New(NewHandler(w, opts).WithGroup("test_group"))
 
-	timeString := csf(time.Now().Format("[15:06]"), fgWhite)
+	logger.Info("My INFO message",
+		slog.Any("a", "1"),
+	)
+
+	expected := fmt.Sprint("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n\x1b[32mG\x1b[0m \x1b[35mtest_group\x1b[0m: \x1b[32m============\x1b[0m\n    \x1b[35ma\x1b[0m: 1\n\n")
+
+	if !bytes.Equal(w.WrittenData, []byte(expected)) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_WithGroupsEmpty(t *testing.T) {
+	w := &MockWriter{}
+
+	slogOpts := &slog.HandlerOptions{
+		AddSource: false,
+		Level:     slog.LevelDebug,
+	}
+
+	opts := &Options{
+		HandlerOptions:    slogOpts,
+		MaxSlicePrintSize: 4,
+		SortKeys:          true,
+		TimeFormat:        "[]",
+	}
+
+	logger := slog.New(NewHandler(w, opts).WithGroup("test_group"))
+
 	logger.Info("My INFO message")
 
-	expected := fmt.Sprintf("%[1]v \x1b[30m\x1b[42m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n\n", timeString)
+	expected := fmt.Sprint("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, []byte(expected)) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_WithAttributes(t *testing.T) {
+	w := &MockWriter{}
+
+	slogOpts := &slog.HandlerOptions{
+		AddSource: false,
+		Level:     slog.LevelDebug,
+	}
+
+	opts := &Options{
+		HandlerOptions:    slogOpts,
+		MaxSlicePrintSize: 4,
+		SortKeys:          true,
+		TimeFormat:        "[]",
+	}
+
+	as := []slog.Attr{slog.Any("a", "1")}
+	logger := slog.New(NewHandler(w, opts).WithAttrs(as))
+
+	logger.Info("My INFO message")
+
+	expected := fmt.Sprint("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n  \x1b[35ma\x1b[0m: 1\n\n")
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
@@ -440,7 +402,7 @@ const (
 	LevelEmergency = slog.Level(12)
 )
 
-func Test_ReplaceLevelAttributes(t *testing.T) {
+func test_ReplaceLevelAttributes(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -458,7 +420,7 @@ func Test_ReplaceLevelAttributes(t *testing.T) {
 
 	logger := slog.New(NewHandler(w, opts))
 
-	timeString := csf(time.Now().Format("[15:06]"), fgWhite)
+	timeString := csf([]byte(time.Now().Format("[15:06]")), fgWhite)
 	ctx := context.Background()
 	logger.Log(ctx, LevelEmergency, "missing pilots")
 	logger.Error("failed to start engines", "err", "missing fuel")
@@ -468,7 +430,7 @@ func Test_ReplaceLevelAttributes(t *testing.T) {
 	logger.Debug("starting background job")
 	logger.Log(ctx, LevelTrace, "button clicked")
 
-	expected := fmt.Sprintf("%[1]v \x1b[30m\x1b[41m EMERGENCY \x1b[0m \x1b[31mmissing pilots\x1b[0m\n  \x1b[35msev\x1b[0m : EMERGENCY\n\n%[1]v \x1b[30m\x1b[41m ERROR \x1b[0m \x1b[31mfailed to start engines\x1b[0m\n  \x1b[35merr\x1b[0m : missing fuel\n  \x1b[35msev\x1b[0m : ERROR\n\n%[1]v \x1b[30m\x1b[43m WARNING \x1b[0m \x1b[33mfalling back to default value\x1b[0m\n  \x1b[35msev\x1b[0m : WARNING\n\n%[1]v \x1b[30m\x1b[42m NOTICE \x1b[0m \x1b[32mall systems are running\x1b[0m\n  \x1b[35msev\x1b[0m : NOTICE\n\n%[1]v \x1b[30m\x1b[42m INFO \x1b[0m \x1b[32minitiating launch\x1b[0m\n  \x1b[35msev\x1b[0m : INFO\n\n%[1]v \x1b[30m\x1b[44m DEBUG \x1b[0m \x1b[34mstarting background job\x1b[0m\n  \x1b[35msev\x1b[0m : DEBUG\n\n", timeString)
+	expected := fmt.Sprintf("%[1]s \x1b[41m\x1b[30m EMERGENCY \x1b[0m \x1b[31mmissing pilots\x1b[0m\n  \x1b[35msev\x1b[0m: EMERGENCY\n\n%[1]s \x1b[41m\x1b[30m ERROR \x1b[0m \x1b[31mfailed to start engines\x1b[0m\n  \x1b[35merr\x1b[0m: missing fuel\n  \x1b[35msev\x1b[0m: ERROR\n\n%[1]s \x1b[43m\x1b[30m WARNING \x1b[0m \x1b[33mfalling back to default value\x1b[0m\n  \x1b[35msev\x1b[0m: WARNING\n\n%[1]s \x1b[42m\x1b[30m NOTICE \x1b[0m \x1b[32mall systems are running\x1b[0m\n  \x1b[35msev\x1b[0m: NOTICE\n\n%[1]s \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32minitiating launch\x1b[0m\n  \x1b[35msev\x1b[0m: INFO\n\n%[1]s \x1b[44m\x1b[30m DEBUG \x1b[0m \x1b[34mstarting background job\x1b[0m\n  \x1b[35msev\x1b[0m: DEBUG\n\n", timeString)
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
@@ -506,4 +468,229 @@ func replaceAttributes(groups []string, a slog.Attr) slog.Attr {
 	}
 
 	return a
+}
+
+func test_String(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	s := "string"
+
+	logger.Info("msg",
+		slog.Any("s", s),
+		slog.Any("sp", &s),
+		slog.Any("empty", ""),
+		slog.Any("url", "https://go.dev/"),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n  \x1b[35mempty\x1b[0m: \x1b[2m\x1b[37mempty\x1b[0m\n  \x1b[35ms\x1b[0m    : string\n  \x1b[35msp\x1b[0m   : string\n\x1b[34m*\x1b[0m \x1b[35murl\x1b[0m  : \x1b[4m\x1b[34mhttps://go.dev/\x1b[0m\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_IntFloat(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	i := 1
+	f := 1.21
+	logger.Info("msg",
+		slog.Any("i", i),
+		slog.Any("f", f),
+		slog.Any("ip", &i),
+		slog.Any("fp", &f),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mf\x1b[0m : \x1b[33m1.21\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mfp\x1b[0m: \x1b[33m1.21\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mi\x1b[0m : \x1b[33m1\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mip\x1b[0m: \x1b[33m1\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Bool(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	b := true
+
+	logger.Info("msg",
+		slog.Any("b", b),
+		slog.Any("bp", &b),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[31m#\x1b[0m \x1b[35mb\x1b[0m : \x1b[31mtrue\x1b[0m\n\x1b[31m#\x1b[0m \x1b[35mbp\x1b[0m: \x1b[31mtrue\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Time(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	timeT := time.Date(2012, time.March, 28, 0, 0, 0, 0, time.UTC)
+	timeE := time.Date(2023, time.August, 15, 12, 0, 0, 0, time.UTC)
+	timeD := timeE.Sub(timeT)
+
+	logger.Info("msg",
+		slog.Any("t", timeT),
+		slog.Any("tp", &timeT),
+		slog.Any("d", timeD),
+		slog.Any("tp", &timeD),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[36m@\x1b[0m \x1b[35md\x1b[0m : \x1b[36m99780h0m0s\x1b[0m\n\x1b[36m@\x1b[0m \x1b[35mt\x1b[0m : \x1b[36m2012-03-28 00:00:00 +0000 UTC\x1b[0m\n\x1b[36m@\x1b[0m \x1b[35mtp\x1b[0m: \x1b[36m2012-03-28 00:00:00 +0000 UTC\x1b[0m\n\x1b[36m@\x1b[0m \x1b[35mtp\x1b[0m: \x1b[36m99780h0m0s\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Error(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	e := fmt.Errorf("broken")
+	e = fmt.Errorf("err 1: %w", e)
+	e = fmt.Errorf("err 2: %w", e)
+
+	logger.Info("msg",
+		slog.Any("e", e),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[31mE\x1b[0m \x1b[35me\x1b[0m: \x1b[4m\x1b[31mbroken\x1b[0m\x1b[0m\n    \x1b[31m0\x1b[0m: \x1b[4m\x1b[31merr 2: \x1b[0m\x1b[0m\n    \x1b[31m1\x1b[0m: \x1b[4m\x1b[31merr 1: \x1b[0m\x1b[0m\n    \x1b[31m2\x1b[0m: \x1b[4m\x1b[31mbroken\x1b[0m\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Slice(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	s := []string{"apple", "ba na na"}
+
+	logger.Info("msg",
+		slog.Any("s", s),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[32mS\x1b[0m \x1b[35ms\x1b[0m: \x1b[34m2\x1b[0m \x1b[32m[\x1b[0m\x1b[32m]\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\n    \x1b[32m0\x1b[0m: apple\n    \x1b[32m1\x1b[0m: ba na na\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_SliceBig(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	s := make([]int, 0)
+	for i := 0; i < 11; i++ {
+		s = append(s, i*2)
+	}
+
+	logger.Info("msg",
+		slog.Any("s", s),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[32mS\x1b[0m \x1b[35ms\x1b[0m: \x1b[34m11\x1b[0m \x1b[32m[\x1b[0m\x1b[32m]\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\n    \x1b[32m0\x1b[0m: 0\n    \x1b[32m1\x1b[0m: 2\n    \x1b[32m2\x1b[0m: 4\n    \x1b[32m3\x1b[0m: 6\n       \x1b[34m...\x1b[0m\x1b[32m]\x1b[0m\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Map(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	m := map[int]string{0: "a", 1: "b"}
+	mp := &m
+
+	logger.Info("msg",
+		slog.Any("m", m),
+		slog.Any("mp", mp),
+		slog.Any("mpp", &mp),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[32mM\x1b[0m \x1b[35mm\x1b[0m  : \x1b[34m2\x1b[0m \x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\x1b[32m]\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\n    \x1b[32m0\x1b[0m: a\n    \x1b[32m1\x1b[0m: b\n\x1b[32mM\x1b[0m \x1b[35mmp\x1b[0m : \x1b[34m2\x1b[0m \x1b[31m*\x1b[0m\x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\x1b[32m]\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\n    \x1b[32m0\x1b[0m: a\n    \x1b[32m1\x1b[0m: b\n\x1b[32mM\x1b[0m \x1b[35mmpp\x1b[0m: \x1b[34m2\x1b[0m \x1b[31m*\x1b[0m\x1b[31m*\x1b[0m\x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\x1b[32m]\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\n    \x1b[32m0\x1b[0m: a\n    \x1b[32m1\x1b[0m: b\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_MapOfPointers(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	s := "a"
+	m := map[int]*string{0: &s, 1: &s}
+
+	logger.Info("msg",
+		slog.Any("m", m),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[32mM\x1b[0m \x1b[35mm\x1b[0m: \x1b[34m2\x1b[0m \x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\x1b[32m]\x1b[0m\x1b[31m*\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\n    \x1b[32m0\x1b[0m: a\n    \x1b[32m1\x1b[0m: a\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Struct(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	type StructTest struct {
+		Slice   []int
+		Map     map[int]int
+		Struct  struct{ B bool }
+		SliceP  *[]int
+		MapP    *map[int]int
+		StructP *struct{ B bool }
+	}
+
+	s := &StructTest{
+		Slice:   []int{},
+		Map:     map[int]int{},
+		Struct:  struct{ B bool }{},
+		SliceP:  &[]int{},
+		MapP:    &map[int]int{},
+		StructP: &struct{ B bool }{},
+	}
+
+	logger.Info("msg",
+		slog.Any("s", s),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33mS\x1b[0m \x1b[35ms\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mS\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mu\x1b[0m\x1b[33mc\x1b[0m\x1b[33mt\x1b[0m\x1b[33mT\x1b[0m\x1b[33me\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\n    \x1b[32mSlice\x1b[0m  : \x1b[34m0\x1b[0m \x1b[32m[\x1b[0m\x1b[32m]\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\n    \x1b[32mMap\x1b[0m    : \x1b[34m0\x1b[0m \x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\x1b[32m]\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\n    \x1b[32mStruct\x1b[0m : \x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mu\x1b[0m\x1b[33mc\x1b[0m\x1b[33mt\x1b[0m\x1b[33m \x1b[0m\x1b[33m{\x1b[0m\x1b[33m \x1b[0m\x1b[33mB\x1b[0m\x1b[33m \x1b[0m\x1b[33mb\x1b[0m\x1b[33mo\x1b[0m\x1b[33mo\x1b[0m\x1b[33ml\x1b[0m\x1b[33m \x1b[0m\x1b[33m}\x1b[0m\n      \x1b[32mB\x1b[0m: false\n    \x1b[32mSliceP\x1b[0m : \x1b[34m0\x1b[0m \x1b[31m*\x1b[0m\x1b[32m[\x1b[0m\x1b[32m]\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\n    \x1b[32mMapP\x1b[0m   : \x1b[34m0\x1b[0m \x1b[31m*\x1b[0m\x1b[33mm\x1b[0m\x1b[33ma\x1b[0m\x1b[33mp\x1b[0m\x1b[32m[\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\x1b[32m]\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mt\x1b[0m\n    \x1b[32mStructP\x1b[0m: \x1b[31m*\x1b[0m\x1b[33ms\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mu\x1b[0m\x1b[33mc\x1b[0m\x1b[33mt\x1b[0m\x1b[33m \x1b[0m\x1b[33m{\x1b[0m\x1b[33m \x1b[0m\x1b[33mB\x1b[0m\x1b[33m \x1b[0m\x1b[33mb\x1b[0m\x1b[33mo\x1b[0m\x1b[33mo\x1b[0m\x1b[33ml\x1b[0m\x1b[33m \x1b[0m\x1b[33m}\x1b[0m\n      \x1b[32mB\x1b[0m: false\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func test_Group(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	logger.Info("msg",
+		slog.Any("1", "a"),
+		slog.Group("g",
+			slog.Any("2", "b"),
+		),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n  \x1b[35m1\x1b[0m: a\n\x1b[32mG\x1b[0m \x1b[35mg\x1b[0m: \x1b[32m============\x1b[0m\n    \x1b[35m2\x1b[0m: b\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
 }
