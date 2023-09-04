@@ -272,14 +272,30 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 			case reflect.Struct:
 				m = cs([]byte("S"), fgYellow)
 				v = h.formatStruct(at, av, 0)
-			case reflect.Float32, reflect.Float64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			case reflect.Float32, reflect.Float64:
 				m = cs([]byte("#"), fgYellow)
-				v = cs(atb(uv.Interface()), fgYellow)
+				v = cs(atb(uv.Float()), fgYellow)
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				m = cs([]byte("#"), fgYellow)
+				v = cs(atb(uv.Int()), fgYellow)
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				m = cs([]byte("#"), fgYellow)
+				v = cs(atb(uv.Uint()), fgYellow)
 			case reflect.Bool:
 				m = cs([]byte("#"), fgRed)
 				v = cs(atb(uv.Bool()), fgRed)
 			case reflect.String:
-				v = []byte(uv.String())
+				s := uv.String()
+				if len(s) == 0 {
+					v = csf([]byte("empty"), fgWhite)
+				} else if h.isURL([]byte(s)) {
+					v = ul(cs(v, fgBlue))
+				} else {
+					v = []byte(uv.String())
+				}
+			default:
+				m = cs([]byte("!"), fgRed)
+				v = cs(atb("Unknown type"), fgRed)
 			}
 		case slog.KindGroup:
 			m = cs([]byte("G"), fgGreen)
@@ -452,9 +468,38 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int) (b 
 			b = h.formatMap(t, v, l+1)
 		case reflect.Struct:
 			b = h.formatStruct(t, v, l+1)
+		default:
+			if v.IsNil() {
+				b = cs([]byte("<"), fgRed)
+				b = append(b, cs([]byte("nil"), fgYellow)...)
+				b = append(b, cs([]byte(">"), fgRed)...)
+			}
+		}
+	case reflect.Float32, reflect.Float64:
+		b = cs(atb(v.Float()), fgYellow)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		b = cs(atb(v.Int()), fgYellow)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		b = cs(atb(v.Uint()), fgYellow)
+	case reflect.Bool:
+		b = cs(atb(v.Bool()), fgRed)
+	case reflect.String:
+		s := v.String()
+		if len(s) == 0 {
+			b = csf([]byte("empty"), fgWhite)
+		} else if h.isURL([]byte(s)) {
+			b = ul(cs([]byte(s), fgBlue))
+		} else {
+			b = atb(s)
 		}
 	default:
-		b = atb(v.Interface())
+		if v.CanInterface() {
+			b = atb(v.Interface())
+		} else {
+			b = atb("Unknown type: ")
+			b = append(b, atb(v.Kind())...)
+			b = cs(b, fgRed)
+		}
 	}
 
 	return b
@@ -527,6 +572,9 @@ func (h *developHandler) reducePointerValue(v reflect.Value) reflect.Value {
 func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value) (reflect.Type, reflect.Value) {
 	for t.Kind() == reflect.Pointer {
 		v = v.Elem()
+		if isNilValue(v) {
+			return t, v
+		}
 		t = v.Type()
 	}
 
@@ -536,4 +584,9 @@ func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value)
 // Any to []byte using fmt.Sprint
 func atb(a any) []byte {
 	return []byte(fmt.Sprint(a))
+}
+
+func isNilValue(v reflect.Value) bool {
+	nilValue := reflect.ValueOf(nil)
+	return v == nilValue
 }
