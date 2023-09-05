@@ -261,6 +261,12 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 
 			at := reflect.TypeOf(any)
 			av := reflect.ValueOf(any)
+			if at == nil {
+				m = cs([]byte("!"), fgRed)
+				v = cs(atb("Unknown type"), fgRed)
+				break
+			}
+
 			ut, uv := h.reducePointerTypeValue(at, av)
 
 			switch ut.Kind() {
@@ -460,19 +466,12 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int) (b 
 	case reflect.Struct:
 		b = h.formatStruct(t, v, l+1)
 	case reflect.Pointer:
-		switch v.Elem().Kind() {
-		case reflect.Slice:
-			b = h.formatSlice(t, v, l+1)
-		case reflect.Map:
-			b = h.formatMap(t, v, l+1)
-		case reflect.Struct:
-			b = h.formatStruct(t, v, l+1)
-		default:
-			if v.IsNil() {
-				b = cs([]byte("<"), fgRed)
-				b = append(b, cs([]byte("nil"), fgYellow)...)
-				b = append(b, cs([]byte(">"), fgRed)...)
-			}
+		if v.IsNil() {
+			b = cs([]byte("<"), fgRed)
+			b = append(b, cs([]byte("nil"), fgYellow)...)
+			b = append(b, cs([]byte(">"), fgRed)...)
+		} else {
+			b = h.elementType(t, v.Elem(), l)
 		}
 	case reflect.Float32, reflect.Float64:
 		b = cs(atb(v.Float()), fgYellow)
@@ -492,13 +491,9 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int) (b 
 			b = atb(s)
 		}
 	default:
-		if v.CanInterface() {
-			b = atb(v.Interface())
-		} else {
-			b = atb("Unknown type: ")
-			b = append(b, atb(v.Kind())...)
-			b = cs(b, fgRed)
-		}
+		b = atb("Unknown type: ")
+		b = append(b, atb(v.Kind())...)
+		b = cs(b, fgRed)
 	}
 
 	return b
@@ -569,7 +564,11 @@ func (h *developHandler) reducePointerValue(v reflect.Value) reflect.Value {
 }
 
 func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value) (reflect.Type, reflect.Value) {
-	for t.Kind() == reflect.Pointer {
+	if t == nil {
+		return t, v
+	}
+
+	for v.Kind() == reflect.Pointer {
 		v = v.Elem()
 		if isNilValue(v) {
 			return t, v
