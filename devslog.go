@@ -3,6 +3,7 @@ package devslog
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -332,16 +333,14 @@ func (h *developHandler) isURL(u []byte) bool {
 func (h *developHandler) formatError(err error, l int) (b []byte) {
 	errs := make([][]byte, 0)
 	for err != nil {
-		unwrapErr, ok := err.(interface{ Unwrap() error })
-		if !ok {
+		ue := errors.Unwrap(err)
+		if ue != nil {
+			pe, ok := strings.CutSuffix(err.Error(), ue.Error())
+			if ok {
+				errs = append(errs, []byte(pe))
+			}
+		} else {
 			errs = append(errs, []byte(err.Error()))
-			break
-		}
-
-		ue := unwrapErr.Unwrap()
-		pe, ok := strings.CutSuffix(err.Error(), ue.Error())
-		if ok {
-			errs = append(errs, []byte(pe))
 		}
 
 		err = ue
