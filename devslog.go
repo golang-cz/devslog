@@ -3,6 +3,7 @@ package devslog
 import (
 	"bytes"
 	"context"
+	"encoding"
 	"errors"
 	"fmt"
 	"io"
@@ -259,6 +260,11 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				break
 			}
 
+			if textMarshaller, ok := any.(encoding.TextMarshaler); ok {
+				v = atb(textMarshaller)
+				break
+			}
+
 			at := reflect.TypeOf(any)
 			av := reflect.ValueOf(any)
 			if at == nil {
@@ -457,7 +463,13 @@ func (h *developHandler) formatStruct(st reflect.Type, sv reflect.Value, l int) 
 	return b
 }
 
+var marshalTextInterface = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
+
 func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int) (b []byte) {
+	if t.Implements(marshalTextInterface) {
+		return atb(v)
+	}
+
 	switch v.Kind() {
 	case reflect.Slice:
 		b = h.formatSlice(t, v, l+1)
