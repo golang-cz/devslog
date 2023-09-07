@@ -579,9 +579,9 @@ func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value)
 	return t, v
 }
 
-// Any to []byte using fmt.Sprint
+// Any to []byte using fmt.Sprintf
 func atb(a any) []byte {
-	return []byte(fmt.Sprint(a))
+	return []byte(fmt.Sprintf("%v", a))
 }
 
 func isNilValue(v reflect.Value) bool {
