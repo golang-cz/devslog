@@ -240,24 +240,21 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 		case slog.KindAny:
 			any := a.Value.Any()
 
-			err, isErr := any.(error)
-			if isErr {
+			if err, ok := any.(error); ok {
 				m = cs([]byte("E"), fgRed)
 				v = h.formatError(err, l)
 				break
 			}
 
-			timeT, isTim := any.(*time.Time)
-			if isTim {
+			if t, ok := any.(*time.Time); ok {
 				m = cs([]byte("@"), fgCyan)
-				v = cs([]byte(timeT.String()), fgCyan)
+				v = cs([]byte(t.String()), fgCyan)
 				break
 			}
 
-			timeD, isTim := any.(*time.Duration)
-			if isTim {
+			if dur, ok := any.(*time.Duration); ok {
 				m = cs([]byte("@"), fgCyan)
-				v = cs([]byte(timeD.String()), fgCyan)
+				v = cs([]byte(dur.String()), fgCyan)
 				break
 			}
 
