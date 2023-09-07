@@ -219,6 +219,7 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 		k := cs([]byte(a.Key), fgMagenta)
 		v := []byte(a.Value.String())
 		m := []byte(" ")
+
 		switch a.Value.Kind() {
 		case slog.KindFloat64, slog.KindInt64, slog.KindUint64:
 			m = cs([]byte("#"), fgYellow)
@@ -276,6 +277,9 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 			ut, uv := h.reducePointerTypeValue(at, av)
 
 			switch ut.Kind() {
+			case reflect.Array:
+				m = cs([]byte("A"), fgGreen)
+				v = h.formatSlice(at, av, l)
 			case reflect.Slice:
 				m = cs([]byte("S"), fgGreen)
 				v = h.formatSlice(at, av, l)
@@ -306,6 +310,7 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				} else {
 					v = []byte(uv.String())
 				}
+
 			default:
 				m = cs([]byte("!"), fgRed)
 				v = cs(atb("Unknown type"), fgRed)
@@ -471,6 +476,8 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int) (b 
 	}
 
 	switch v.Kind() {
+	case reflect.Array:
+		b = h.formatSlice(t, v, l+1)
 	case reflect.Slice:
 		b = h.formatSlice(t, v, l+1)
 	case reflect.Map:
