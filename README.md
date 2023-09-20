@@ -39,7 +39,7 @@ w := os.Stdout
 opts := &devslog.Options{
 	MaxSlicePrintSize: 4,
 	SortKeys:          true,
-	TimeFormat:        "[06:05]"
+	TimeFormat:        "[04:05]"
 }
 
 logger := slog.New(devslog.NewHandler(w, opts))
@@ -105,4 +105,4 @@ slog.SetDefault(logger)
 |-------------------|----------------------------------------------------------------|--------------|--------|
 | MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice. | 50           | uint   |
 | SortKeys          | Determines if attributes should be sorted by keys.             | false        | bool   |
-| TimeFormat        | Time format for timestamp.                                     | "[15:06:05]" | string |
+| TimeFormat        | Time format for timestamp.                                     | "[15:04:05]" | string |

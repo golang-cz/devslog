@@ -85,8 +85,8 @@ func test_NewHandlerDefaults(t *testing.T) {
 		t.Errorf("Expected default MaxSlicePrintSize to be 50")
 	}
 
-	if h.opts.TimeFormat != "[15:06:05]" {
-		t.Errorf("Expected default TimeFormat to be \"[15:06:05]\" ")
+	if h.opts.TimeFormat != "[15:04:05]" {
+		t.Errorf("Expected default TimeFormat to be \"[15:04:05]\" ")
 	}
 
 	if h.out == nil {
@@ -102,7 +102,7 @@ func test_NewHandlerWithOptions(t *testing.T) {
 	handlerOpts := &Options{
 		HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelWarn},
 		MaxSlicePrintSize: 10,
-		TimeFormat:        "[06:05]",
+		TimeFormat:        "[04:05]",
 	}
 	h := NewHandler(nil, handlerOpts)
 
@@ -114,8 +114,8 @@ func test_NewHandlerWithOptions(t *testing.T) {
 		t.Errorf("Expected custom MaxSlicePrintSize to be 10")
 	}
 
-	if h.opts.TimeFormat != "[06:05]" {
-		t.Errorf("Expected custom TimeFormat to be \"[06:05]\" ")
+	if h.opts.TimeFormat != "[04:05]" {
+		t.Errorf("Expected custom TimeFormat to be \"[04:05]\" ")
 	}
 }
 
@@ -295,12 +295,12 @@ func test_Source(t *testing.T) {
 		HandlerOptions:    slogOpts,
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
-		TimeFormat:        "[15:06]",
+		TimeFormat:        "[15:04]",
 	}
 
 	logger := slog.New(NewHandler(w, opts))
 
-	timeString := csf([]byte(time.Now().Format("[15:06]")), fgWhite)
+	timeString := csf([]byte(time.Now().Format("[15:04]")), fgWhite)
 	_, filename, l, _ := runtime.Caller(0)
 	logger.Info("message")
 
@@ -415,12 +415,12 @@ func test_ReplaceLevelAttributes(t *testing.T) {
 		HandlerOptions:    slogOpts,
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
-		TimeFormat:        "[15:06]",
+		TimeFormat:        "[15:04]",
 	}
 
 	logger := slog.New(NewHandler(w, opts))
 
-	timeString := csf([]byte(time.Now().Format("[15:06]")), fgWhite)
+	timeString := csf([]byte(time.Now().Format("[15:04]")), fgWhite)
 	ctx := context.Background()
 	logger.Log(ctx, LevelEmergency, "missing pilots")
 	logger.Error("failed to start engines", "err", "missing fuel")
