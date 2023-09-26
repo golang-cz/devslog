@@ -295,12 +295,12 @@ func test_Source(t *testing.T) {
 		HandlerOptions:    slogOpts,
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
-		TimeFormat:        "[15:06]",
+		TimeFormat:        "[15:04]",
 	}
 
 	logger := slog.New(NewHandler(w, opts))
 
-	timeString := csf([]byte(time.Now().Format("[15:06]")), fgWhite)
+	timeString := csf([]byte(time.Now().Format("[15:04]")), fgWhite)
 	_, filename, l, _ := runtime.Caller(0)
 	logger.Info("message")
 
@@ -415,12 +415,12 @@ func test_ReplaceLevelAttributes(t *testing.T) {
 		HandlerOptions:    slogOpts,
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
-		TimeFormat:        "[15:06]",
+		TimeFormat:        "[15:04]",
 	}
 
 	logger := slog.New(NewHandler(w, opts))
 
-	timeString := csf([]byte(time.Now().Format("[15:06]")), fgWhite)
+	timeString := csf([]byte(time.Now().Format("[15:04]")), fgWhite)
 	ctx := context.Background()
 	logger.Log(ctx, LevelEmergency, "missing pilots")
 	logger.Error("failed to start engines", "err", "missing fuel")
