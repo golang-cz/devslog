@@ -35,7 +35,7 @@ type Options struct {
 	// If the attributes should be sorted by keys
 	SortKeys bool
 
-	// Time format for timestamp, default format is "[15:06:05]"
+	// Time format for timestamp, default format is "[15:04:05]"
 	TimeFormat string
 }
 
@@ -67,13 +67,13 @@ func NewHandler(out io.Writer, o *Options) *developHandler {
 		}
 
 		if o.TimeFormat == "" {
-			h.opts.TimeFormat = "[15:06:05]"
+			h.opts.TimeFormat = "[15:04:05]"
 		}
 	} else {
 		h.opts = Options{
 			HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelInfo},
 			MaxSlicePrintSize: 50,
-			TimeFormat:        "[15:06:05]",
+			TimeFormat:        "[15:04:05]",
 		}
 	}
 
