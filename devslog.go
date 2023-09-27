@@ -345,32 +345,40 @@ func (h *developHandler) isURL(u []byte) bool {
 }
 
 func (h *developHandler) formatError(err error, l int) (b []byte) {
-	errs := make([][]byte, 0)
-	for err != nil {
+	if err == nil {
+		b = append(b, ul(cs([]byte("<nil>"), fgRed))...)
+		return
+	}
+
+	for i := 0; err != nil; i++ {
+		b = append(b, '\n')
+		b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
+		tb := strconv.Itoa(i)
+		b = append(b, cs([]byte(tb), fgRed)...)
+		b = append(b, cs([]byte(": "), fgWhite)...)
+
+		errMsg := err.Error()
 		ue := errors.Unwrap(err)
 		if ue != nil {
-			pe, ok := strings.CutSuffix(err.Error(), ue.Error())
-			if ok {
-				errs = append(errs, []byte(pe))
-			}
-		} else {
-			errs = append(errs, []byte(err.Error()))
+			errMsg, _ = strings.CutSuffix(errMsg, ue.Error())
+			errMsg, _ = strings.CutSuffix(errMsg, ": ")
+		}
+		if errMsg == "" {
+			errMsg = fmt.Sprintf("[%T]", err)
+		}
+		b = append(b, cs([]byte(errMsg), fgRed)...)
+
+		for j, fileLine := range getFileLineFromPC(extractPCFromError(err)) {
+			b = append(b, '\n')
+			tb := strconv.Itoa(j)
+			b = append(b, bytes.Repeat([]byte(" "), l*2+6)...)
+			b = append(b, bytes.Repeat([]byte(" "), len(tb))...)
+			b = append(b, cs([]byte(tb), fgBlue)...)
+			b = append(b, []byte(": ")...)
+			b = append(b, ul(cs([]byte(fileLine), fgBlue))...)
 		}
 
 		err = ue
-	}
-
-	b = append(b, ul(cs([]byte(errs[len(errs)-1]), fgRed))...)
-	d := len(strconv.Itoa(len(errs)))
-	for i, e := range errs {
-		tb := strconv.Itoa(i)
-		b = append(b, '\n')
-		b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
-		b = append(b, bytes.Repeat([]byte(" "), d-len(tb))...)
-		b = append(b, cs([]byte(tb), fgRed)...)
-		b = append(b, ':')
-		b = append(b, ' ')
-		b = append(b, ul(cs(e, fgRed))...)
 	}
 
 	return b
