@@ -562,7 +562,7 @@ func test_Error(t *testing.T, o *Options) {
 		slog.Any("e", e),
 	)
 
-	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[31mE\x1b[0m \x1b[35me\x1b[0m: \x1b[4m\x1b[31mbroken\x1b[0m\x1b[0m\n    \x1b[31m0\x1b[0m: \x1b[4m\x1b[31merr 2: \x1b[0m\x1b[0m\n    \x1b[31m1\x1b[0m: \x1b[4m\x1b[31merr 1: \x1b[0m\x1b[0m\n    \x1b[31m2\x1b[0m: \x1b[4m\x1b[31mbroken\x1b[0m\x1b[0m\n\n")
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[31mE\x1b[0m \x1b[35me\x1b[0m: \n    \x1b[31m0\x1b[0m\x1b[37m: \x1b[0m\x1b[31merr 2\x1b[0m\n    \x1b[31m1\x1b[0m\x1b[37m: \x1b[0m\x1b[31merr 1\x1b[0m\n    \x1b[31m2\x1b[0m\x1b[37m: \x1b[0m\x1b[31mbroken\x1b[0m\n\n")
 
 	if !bytes.Equal(w.WrittenData, expected) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
