@@ -1,14 +1,14 @@
-# 🧻 `devslog` - [`slog.Handler`](https://pkg.go.dev/log/slog#Handler) for developing code
+# 🧻 devslog - Go [slog.Handler](https://pkg.go.dev/log/slog#Handler) for development
  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/golang-cz/devslog/blob/master/LICENSE)
  [![Go Report Card](https://goreportcard.com/badge/github.com/golang-cz/devslog)](https://goreportcard.com/report/github.com/golang-cz/devslog)
  [![Go Reference](https://pkg.go.dev/badge/github.com/golang-cz/devslog.svg)](https://pkg.go.dev/github.com/golang-cz/devslog)
 
-`devslog` is zero dependency custom logging handler for Go's standard [`log/slog`](https://pkg.go.dev/log/slog) package that provides structured logging with colorful and indented structure for developing.
+`devslog` is a zero dependency structured logging handler for Go's [`log/slog`](https://pkg.go.dev/log/slog) package with pretty and colorful output for developers.
 
-### Develop with this output
+### Devslog output
 ![image](https://github.com/golang-cz/devslog/assets/17728576/cfdc1634-16fe-4dd0-a643-21bf519cd4fe)
 
-### Instead of these outputs
+#### Compared to
 `TextHandler`
 ![image](https://github.com/golang-cz/devslog/assets/17728576/49aab1c0-93ba-409d-8637-a96eeeaaf0e1)
 
@@ -23,9 +23,7 @@ go get github.com/golang-cz/devslog@latest
 ## Examples
 ### Logger without options
 ```go
-w := os.Stdout
-
-logger := slog.New(devslog.NewHandler(w, nil))
+logger := slog.New(devslog.NewHandler(os.Stdout, nil))
 
 // optional: set global logger
 slog.SetDefault(logger)
@@ -33,8 +31,6 @@ slog.SetDefault(logger)
 
 ### Logger with custom options
 ```go
-w := os.Stdout
-
 // new logger with options
 opts := &devslog.Options{
 	MaxSlicePrintSize: 4,
@@ -42,17 +38,15 @@ opts := &devslog.Options{
 	TimeFormat:        "[04:05]"
 }
 
-logger := slog.New(devslog.NewHandler(w, opts))
+logger := slog.New(devslog.NewHandler(os.Stdout, opts))
 
 // optional: set global logger
 slog.SetDefault(logger)
 ```
 
 ### Logger with default slog options
-Handler accept default [slog.HandlerOptions](https://pkg.go.dev/golang.org/x/exp/slog#HandlerOptions)
+Handler accepts default [slog.HandlerOptions](https://pkg.go.dev/golang.org/x/exp/slog#HandlerOptions)
 ```go
-w := os.Stdout
-
 // slog.HandlerOptions
 slogOpts := &slog.HandlerOptions{
 	AddSource:   true,
@@ -66,18 +60,14 @@ opts := &devslog.Options{
 	SortKeys:          true,
 }
 
-logger := slog.New(devslog.NewHandler(w, opts))
+logger := slog.New(devslog.NewHandler(os.Stdout, opts))
 
 // optional: set global logger
 slog.SetDefault(logger)
 ```
 
-### Example of initialization with production
+### Example usage
 ```go
-production := false
-
-w := os.Stdout
-
 slogOpts := &slog.HandlerOptions{
 	AddSource: true,
 	Level:     slog.LevelDebug,
@@ -85,7 +75,7 @@ slogOpts := &slog.HandlerOptions{
 
 var logger *slog.Logger
 if production {
-	logger = slog.New(slog.NewJSONHandler(w, slogOpts))
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, slogOpts))
 } else {
 	opts := &devslog.Options{
 		HandlerOptions:    slogOpts,
@@ -93,7 +83,7 @@ if production {
 		SortKeys:          true,
 	}
 
-	logger = slog.New(devslog.NewHandler(w, opts))
+	logger = slog.New(devslog.NewHandler(os.Stdout, opts))
 }
 
 // optional: set global logger
