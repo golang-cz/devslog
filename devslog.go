@@ -38,9 +38,16 @@ type Options struct {
 	// Time format for timestamp, default format is "[15:04:05]"
 	TimeFormat string
 
+	// Set color for Debug level, default: devslog.Blue
 	DebugColor Color
-	InfoColor  Color
-	WarnColor  Color
+
+	// Set color for Info level, default: devslog.Green
+	InfoColor Color
+
+	// Set color for Warn level, default: devslog.Yellow
+	WarnColor Color
+
+	// Set color for Error level, default: devslog.Red
 	ErrorColor Color
 }
 

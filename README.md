@@ -35,7 +35,8 @@ slog.SetDefault(logger)
 opts := &devslog.Options{
 	MaxSlicePrintSize: 4,
 	SortKeys:          true,
-	TimeFormat:        "[04:05]"
+	TimeFormat:        "[04:05]",
+	DebugColor:        devslog.Magenta,
 }
 
 logger := slog.New(devslog.NewHandler(os.Stdout, opts))
@@ -91,8 +92,12 @@ slog.SetDefault(logger)
 ```
 
 ## Options
-| Parameter         | Description                                                    | Default      | Value  |
-|-------------------|----------------------------------------------------------------|--------------|--------|
-| MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice. | 50           | uint   |
-| SortKeys          | Determines if attributes should be sorted by keys.             | false        | bool   |
-| TimeFormat        | Time format for timestamp.                                     | "[15:04:05]" | string |
+| Parameter         | Description                                                    | Default        | Value                |
+|-------------------|----------------------------------------------------------------|----------------|----------------------|
+| MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice. | 50             | uint                 |
+| SortKeys          | Determines if attributes should be sorted by keys.             | false          | bool                 |
+| TimeFormat        | Time format for timestamp.                                     | "[15:04:05]"   | string               |
+| DebugColor        | Color for Debug level                                          | devslog.Blue   | devslog.Color (uint) |
+| InfoColor         | Color for Info level                                           | devslog.Green  | devslog.Color (uint) |
+| WarnColor         | Color for Warn level                                           | devslog.Yellow | devslog.Color (uint) |
+| ErrorColor        | Color for Error level                                          | devslog.Red    | devslog.Color (uint) |
