@@ -6,6 +6,11 @@ type (
 	commonValuesColor []byte
 )
 
+type color struct {
+	fg foregroundColor
+	bg backgroundColor
+}
+
 var (
 	// Foreground colors
 	fgBlack   foregroundColor = []byte("\x1b[30m")
@@ -32,6 +37,40 @@ var (
 	faintColor     commonValuesColor = []byte("\x1b[2m")
 	underlineColor commonValuesColor = []byte("\x1b[4m")
 )
+
+type Color uint
+
+const (
+	UnknownColor Color = iota
+	Black
+	Red
+	Green
+	Yellow
+	Blue
+	Magenta
+	Cyan
+	White
+)
+
+var colors = []color{
+	{},
+	{fgBlack, bgBlack},
+	{fgRed, bgRed},
+	{fgGreen, bgGreen},
+	{fgYellow, bgYellow},
+	{fgBlue, bgBlue},
+	{fgMagenta, bgMagenta},
+	{fgCyan, bgCyan},
+	{fgWhite, bgWhite},
+}
+
+func getColor(c Color) color {
+	if c >= 0 && int(c) < len(colors) {
+		return colors[c]
+	}
+
+	return colors[White]
+}
 
 // Color string foreground
 func cs(b []byte, fgColor foregroundColor) []byte {

@@ -37,6 +37,11 @@ type Options struct {
 
 	// Time format for timestamp, default format is "[15:04:05]"
 	TimeFormat string
+
+	DebugColor Color
+	InfoColor  Color
+	WarnColor  Color
+	ErrorColor Color
 }
 
 type groupOrAttrs struct {
@@ -69,15 +74,34 @@ func NewHandler(out io.Writer, o *Options) *developHandler {
 		if o.TimeFormat == "" {
 			h.opts.TimeFormat = "[15:04:05]"
 		}
+
+		h.opts.DebugColor = ensureValidColor(o.DebugColor, Blue)
+		h.opts.InfoColor = ensureValidColor(o.InfoColor, Green)
+		h.opts.WarnColor = ensureValidColor(o.WarnColor, Yellow)
+		h.opts.ErrorColor = ensureValidColor(o.ErrorColor, Red)
+
 	} else {
 		h.opts = Options{
 			HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelInfo},
 			MaxSlicePrintSize: 50,
+			SortKeys:          false,
 			TimeFormat:        "[15:04:05]",
+			DebugColor:        Blue,
+			InfoColor:         Green,
+			WarnColor:         Yellow,
+			ErrorColor:        Red,
 		}
 	}
 
 	return h
+}
+
+func ensureValidColor(c Color, defaultColor Color) Color {
+	if c > 0 && int(c) < len(colors) {
+		return c
+	}
+
+	return defaultColor
 }
 
 func (h *developHandler) Enabled(ctx context.Context, l slog.Level) bool {
@@ -139,8 +163,6 @@ func (h *developHandler) formatSourceInfo(b []byte, r *slog.Record) []byte {
 }
 
 func (h *developHandler) levelMessage(b []byte, r *slog.Record) []byte {
-	var bgColor backgroundColor
-	var fgColor foregroundColor
 	var ls string
 	if h.opts.ReplaceAttr != nil {
 		a := h.opts.ReplaceAttr(nil, slog.Any(slog.LevelKey, r.Level))
@@ -152,21 +174,22 @@ func (h *developHandler) levelMessage(b []byte, r *slog.Record) []byte {
 		ls = r.Level.String()
 	}
 
+	var c color
 	lr := r.Level
 	switch {
 	case lr < 0:
-		bgColor, fgColor = bgBlue, fgBlue
+		c = getColor(h.opts.DebugColor)
 	case lr < 4:
-		bgColor, fgColor = bgGreen, fgGreen
+		c = getColor(h.opts.InfoColor)
 	case lr < 8:
-		bgColor, fgColor = bgYellow, fgYellow
+		c = getColor(h.opts.WarnColor)
 	default:
-		bgColor, fgColor = bgRed, fgRed
+		c = getColor(h.opts.ErrorColor)
 	}
 
-	b = append(b, csb([]byte(" "+ls+" "), fgBlack, bgColor)...)
+	b = append(b, csb([]byte(" "+ls+" "), fgBlack, c.bg)...)
 	b = append(b, ' ')
-	b = append(b, cs([]byte(r.Message), fgColor)...)
+	b = append(b, cs([]byte(r.Message), c.fg)...)
 	b = append(b, '\n')
 
 	return b
