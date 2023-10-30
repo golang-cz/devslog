@@ -52,6 +52,9 @@ type Options struct {
 
 	// Set color for Error level, default: devslog.Red
 	ErrorColor Color
+
+	// Max stack trace frames when unwrapping errors
+	MaxErrorStackTrace uint
 }
 
 type groupOrAttrs struct {
@@ -404,7 +407,7 @@ func (h *developHandler) formatError(err error, l int) (b []byte) {
 		}
 		b = append(b, cs([]byte(errMsg), fgRed)...)
 
-		for j, fileLine := range getFileLineFromPC(extractPCFromError(err)) {
+		for j, fileLine := range h.getFileLineFromPC(h.extractPCFromError(err)) {
 			b = append(b, '\n')
 			tb := strconv.Itoa(j)
 			b = append(b, bytes.Repeat([]byte(" "), l*2+6)...)
