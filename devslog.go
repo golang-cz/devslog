@@ -38,6 +38,9 @@ type Options struct {
 	// Time format for timestamp, default format is "[15:04:05]"
 	TimeFormat string
 
+	// Add blank line after each log
+	NewLineAfterLog bool
+
 	// Set color for Debug level, default: devslog.Blue
 	DebugColor Color
 
@@ -231,7 +234,10 @@ func (h *developHandler) processAttributes(b []byte, r *slog.Record) []byte {
 	}
 
 	b = h.colorize(b, as, 0, []string{})
-	b = append(b, '\n')
+	if h.opts.NewLineAfterLog {
+		b = append(b, '\n')
+	}
+
 	return b
 }
 
