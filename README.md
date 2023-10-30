@@ -36,6 +36,7 @@ opts := &devslog.Options{
 	MaxSlicePrintSize: 4,
 	SortKeys:          true,
 	TimeFormat:        "[04:05]",
+	NewLineAfterLog:   true,
 	DebugColor:        devslog.Magenta,
 }
 
@@ -59,6 +60,7 @@ opts := &devslog.Options{
 	HandlerOptions:    slogOpts,
 	MaxSlicePrintSize: 4,
 	SortKeys:          true,
+	NewLineAfterLog:   true,
 }
 
 logger := slog.New(devslog.NewHandler(os.Stdout, opts))
@@ -82,6 +84,7 @@ if production {
 		HandlerOptions:    slogOpts,
 		MaxSlicePrintSize: 10,
 		SortKeys:          true,
+		NewLineAfterLog:   true,
 	}
 
 	logger = slog.New(devslog.NewHandler(os.Stdout, opts))
@@ -97,6 +100,7 @@ slog.SetDefault(logger)
 | MaxSlicePrintSize | Specifies the maximum number of elements to print for a slice. | 50             | uint                 |
 | SortKeys          | Determines if attributes should be sorted by keys.             | false          | bool                 |
 | TimeFormat        | Time format for timestamp.                                     | "[15:04:05]"   | string               |
+| NewLineAfterLog   | Add blank line after each log                                  | false          | bool                 |
 | DebugColor        | Color for Debug level                                          | devslog.Blue   | devslog.Color (uint) |
 | InfoColor         | Color for Info level                                           | devslog.Green  | devslog.Color (uint) |
 | WarnColor         | Color for Warn level                                           | devslog.Yellow | devslog.Color (uint) |

@@ -56,6 +56,7 @@ func Test_Types(t *testing.T) {
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
 		TimeFormat:        "[]",
+		NewLineAfterLog:   true,
 	}
 
 	test_String(t, opts)
@@ -296,6 +297,7 @@ func test_Source(t *testing.T) {
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
 		TimeFormat:        "[15:04]",
+		NewLineAfterLog:   true,
 	}
 
 	logger := slog.New(NewHandler(w, opts))
@@ -324,6 +326,7 @@ func test_WithGroups(t *testing.T) {
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
 		TimeFormat:        "[]",
+		NewLineAfterLog:   true,
 	}
 
 	logger := slog.New(NewHandler(w, opts).WithGroup("test_group"))
@@ -352,6 +355,7 @@ func test_WithGroupsEmpty(t *testing.T) {
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
 		TimeFormat:        "[]",
+		NewLineAfterLog:   true,
 	}
 
 	logger := slog.New(NewHandler(w, opts).WithGroup("test_group"))
@@ -378,6 +382,7 @@ func test_WithAttributes(t *testing.T) {
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
 		TimeFormat:        "[]",
+		NewLineAfterLog:   true,
 	}
 
 	as := []slog.Attr{slog.Any("a", "1")}
@@ -416,6 +421,7 @@ func test_ReplaceLevelAttributes(t *testing.T) {
 		MaxSlicePrintSize: 4,
 		SortKeys:          true,
 		TimeFormat:        "[15:04]",
+		NewLineAfterLog:   true,
 	}
 
 	logger := slog.New(NewHandler(w, opts))
