@@ -72,7 +72,7 @@ func NewHandler(out io.Writer, o *Options) *developHandler {
 			if o.Level == nil {
 				h.opts.Level = slog.LevelInfo
 			} else {
-				h.opts.HandlerOptions.Level = o.HandlerOptions.Level
+				h.opts.Level = o.Level
 			}
 		} else {
 			h.opts.HandlerOptions = &slog.HandlerOptions{
@@ -276,6 +276,9 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 		case slog.KindTime, slog.KindDuration:
 			m = cs([]byte("@"), fgCyan)
 			v = cs(v, fgCyan)
+		case slog.KindLogValuer:
+			m = cs([]byte("V"), fgRed)
+			v = []byte(a.Value.LogValuer().LogValue().String())
 		case slog.KindAny:
 			any := a.Value.Any()
 
@@ -306,7 +309,7 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 			av := reflect.ValueOf(any)
 			if at == nil {
 				m = cs([]byte("!"), fgRed)
-				v = cs(atb("Unknown type"), fgRed)
+				v = nilString()
 				break
 			}
 
@@ -346,7 +349,6 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				} else {
 					v = []byte(uv.String())
 				}
-
 			default:
 				m = cs([]byte("!"), fgRed)
 				v = cs(atb("Unknown type"), fgRed)
@@ -425,7 +427,7 @@ func (h *developHandler) formatError(err error, l int) (b []byte) {
 
 func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int) (b []byte) {
 	ts := h.buildTypeString(st.String())
-	st, sv = h.reducePointerTypeValue(st, sv)
+	_, sv = h.reducePointerTypeValue(st, sv)
 
 	b = append(b, cs([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
 	b = append(b, ' ')
@@ -464,7 +466,7 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int) (
 
 func (h *developHandler) formatMap(st reflect.Type, sv reflect.Value, l int) (b []byte) {
 	ts := h.buildTypeString(st.String())
-	st, sv = h.reducePointerTypeValue(st, sv)
+	_, sv = h.reducePointerTypeValue(st, sv)
 
 	p := h.mapKeyPadding(sv, fgGreen)
 	b = append(b, cs([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
@@ -492,7 +494,7 @@ func (h *developHandler) formatMap(st reflect.Type, sv reflect.Value, l int) (b 
 func (h *developHandler) formatStruct(st reflect.Type, sv reflect.Value, l int) (b []byte) {
 	b = h.buildTypeString(st.String())
 
-	st, sv = h.reducePointerTypeValue(st, sv)
+	_, sv = h.reducePointerTypeValue(st, sv)
 	p := h.structKeyPadding(sv, fgGreen)
 
 	for i := 0; i < sv.NumField(); i++ {
@@ -530,9 +532,7 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int) (b 
 		b = h.formatStruct(t, v, l+1)
 	case reflect.Pointer:
 		if v.IsNil() {
-			b = cs([]byte("<"), fgRed)
-			b = append(b, cs([]byte("nil"), fgYellow)...)
-			b = append(b, cs([]byte(">"), fgRed)...)
+			b = nilString()
 		} else {
 			b = h.elementType(t, v.Elem(), l)
 		}
@@ -583,9 +583,7 @@ func (h *developHandler) buildTypeString(ts string) (b []byte) {
 
 func (h *developHandler) sortMapKeys(rv reflect.Value) []reflect.Value {
 	ks := make([]reflect.Value, 0, rv.Len())
-	for _, k := range rv.MapKeys() {
-		ks = append(ks, k)
-	}
+	ks = append(ks, rv.MapKeys()...)
 
 	sort.Slice(ks, func(i, j int) bool {
 		return fmt.Sprint(ks[i].Interface()) < fmt.Sprint(ks[j].Interface())
@@ -650,4 +648,11 @@ func atb(a any) []byte {
 func isNilValue(v reflect.Value) bool {
 	nilValue := reflect.ValueOf(nil)
 	return v == nilValue
+}
+
+func nilString() []byte {
+	b := cs([]byte("<"), fgRed)
+	b = append(b, cs([]byte("nil"), fgYellow)...)
+	b = append(b, cs([]byte(">"), fgRed)...)
+	return b
 }
