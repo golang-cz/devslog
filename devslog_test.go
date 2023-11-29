@@ -70,6 +70,9 @@ func Test_Types(t *testing.T) {
 	test_MapOfPointers(t, opts)
 	test_Struct(t, opts)
 	test_Group(t, opts)
+	test_LogValuer(t, opts)
+	test_LogValuerPanic(t, opts)
+
 }
 
 func test_NewHandlerDefaults(t *testing.T) {
@@ -698,5 +701,60 @@ func test_Group(t *testing.T, o *Options) {
 
 	if !bytes.Equal(w.WrittenData, expected) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+type logValuerExample1 struct {
+	A int
+	B string
+}
+
+func (item logValuerExample1) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.Int("A", item.A),
+		slog.String("B", item.B),
+	)
+}
+
+func test_LogValuer(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+	item1 := logValuerExample1{
+		A: 5,
+		B: "test",
+	}
+	logger.Info("test_log_valuer",
+		slog.Any("item1", item1),
+	)
+
+	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_log_valuer\x1b[0m\n\x1b[32mG\x1b[0m \x1b[35mitem1\x1b[0m: \x1b[32m============\x1b[0m\n  \x1b[33m#\x1b[0m \x1b[35mA\x1b[0m: \x1b[33m5\x1b[0m\n    \x1b[35mB\x1b[0m: test\n\n")
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+type logValuerExample2 struct {
+	A int
+	B string
+}
+
+func (item logValuerExample2) LogValue() slog.Value {
+	panic("log valuer paniced")
+}
+func test_LogValuerPanic(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+	item1 := logValuerExample2{
+		A: 5,
+		B: "test",
+	}
+	logger.Info("test_log_valuer_panic",
+		slog.Any("item1", item1),
+	)
+
+	expectedPrefix := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_log_valuer_panic\x1b[0m\n\x1b[31mE\x1b[0m \x1b[35mitem1\x1b[0m: \n    \x1b[31m0\x1b[0m\x1b[37m: \x1b[0m\x1b[31mLogValue panicked\n")
+	if !bytes.HasPrefix(w.WrittenData, expectedPrefix) {
+		t.Errorf("\nGot:\n%s\n , %[1]q expected it to contain panic stack trace", w.WrittenData)
 	}
 }

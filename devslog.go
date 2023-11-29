@@ -210,12 +210,11 @@ func (h *developHandler) levelMessage(b []byte, r *slog.Record) []byte {
 
 func (h *developHandler) processAttributes(b []byte, r *slog.Record) []byte {
 	var as attributes
-	if r.NumAttrs() != 0 {
-		r.Attrs(func(a slog.Attr) bool {
-			as = append(as, a)
-			return true
-		})
-	}
+	r.Attrs(func(a slog.Attr) bool {
+		a.Value = a.Value.Resolve()
+		as = append(as, a)
+		return true
+	})
 
 	goas := h.goas
 	if r.NumAttrs() == 0 {
