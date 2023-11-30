@@ -275,9 +275,6 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 		case slog.KindTime, slog.KindDuration:
 			m = cs([]byte("@"), fgCyan)
 			v = cs(v, fgCyan)
-		case slog.KindLogValuer:
-			m = cs([]byte("V"), fgRed)
-			v = []byte(a.Value.LogValuer().LogValue().String())
 		case slog.KindAny:
 			any := a.Value.Any()
 
