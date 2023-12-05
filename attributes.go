@@ -1,6 +1,8 @@
 package devslog
 
-import "log/slog"
+import (
+	"log/slog"
+)
 
 type attributes []slog.Attr
 
@@ -19,7 +21,11 @@ func (a attributes) Less(i, j int) bool {
 func (a attributes) padding(c foregroundColor) int {
 	var padding int
 	for _, e := range a {
-		color := len(cs([]byte(e.Key), c))
+		color := len(e.Key)
+		if c != nil {
+			color = len(cs([]byte(e.Key), c))
+		}
+
 		if color > padding {
 			padding = color
 		}
