@@ -41,6 +41,9 @@ type Options struct {
 	// Add blank line after each log
 	NewLineAfterLog bool
 
+	// Indent \n in strings
+	StringIndentation bool
+
 	// Set color for Debug level, default: devslog.Blue
 	DebugColor Color
 
@@ -273,8 +276,10 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				m = cs([]byte("*"), fgBlue)
 				v = ul(cs(v, fgBlue))
 			} else {
-				count := l*2 + (4 + (pr))
-				v = []byte(strings.ReplaceAll(string(v), "\n", "\n"+strings.Repeat(" ", count)))
+				if h.opts.StringIndentation {
+					count := l*2 + (4 + (pr))
+					v = []byte(strings.ReplaceAll(string(v), "\n", "\n"+strings.Repeat(" ", count)))
+				}
 			}
 
 		case slog.KindTime, slog.KindDuration:
@@ -459,7 +464,6 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int) (
 		b = append(b, ':')
 		b = append(b, ' ')
 		b = append(b, h.elementType(t, v, l, l*2+d+2)...)
-
 	}
 
 	return b
@@ -554,13 +558,15 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 		} else if h.isURL([]byte(s)) {
 			b = ul(cs([]byte(s), fgBlue))
 		} else {
-			b = []byte(strings.ReplaceAll(string(s), "\n", "\n"+strings.Repeat(" ", l*2+p+4)))
-
-			// b = atb(s)
+			if h.opts.StringIndentation {
+				b = []byte(strings.ReplaceAll(string(s), "\n", "\n"+strings.Repeat(" ", l*2+p+4)))
+			} else {
+				b = atb(s)
+			}
 		}
 	case reflect.Interface:
 		v = reflect.ValueOf(v.Interface())
-		b = h.elementType(v.Type(), v, l)
+		b = h.elementType(v.Type(), v, l, p)
 	default:
 		b = atb("Unknown type: ")
 		b = append(b, atb(v.Kind())...)
