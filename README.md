@@ -101,6 +101,7 @@ slog.SetDefault(logger)
 | SortKeys           | Determines if attributes should be sorted by keys.             | false          | bool                 |
 | TimeFormat         | Time format for timestamp.                                     | "[15:04:05]"   | string               |
 | NewLineAfterLog    | Add blank line after each log                                  | false          | bool                 |
+| StringIndentation  | Indent \n in strings                                           | false          | bool                 |
 | DebugColor         | Color for Debug level                                          | devslog.Blue   | devslog.Color (uint) |
 | InfoColor          | Color for Info level                                           | devslog.Green  | devslog.Color (uint) |
 | WarnColor          | Color for Warn level                                           | devslog.Yellow | devslog.Color (uint) |
