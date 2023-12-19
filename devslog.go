@@ -44,6 +44,9 @@ type Options struct {
 	// Indent \n in strings
 	StringIndentation bool
 
+	// Maximal nested depth for elements
+	MaxNestedDepth uint
+
 	// Set color for Debug level, default: devslog.Blue
 	DebugColor Color
 
@@ -91,6 +94,10 @@ func NewHandler(out io.Writer, o *Options) *developHandler {
 			h.opts.TimeFormat = "[15:04:05]"
 		}
 
+		if o.MaxNestedDepth == 0 {
+			h.opts.MaxNestedDepth = 20
+		}
+
 		h.opts.DebugColor = ensureValidColor(o.DebugColor, Blue)
 		h.opts.InfoColor = ensureValidColor(o.InfoColor, Green)
 		h.opts.WarnColor = ensureValidColor(o.WarnColor, Yellow)
@@ -102,6 +109,7 @@ func NewHandler(out io.Writer, o *Options) *developHandler {
 			MaxSlicePrintSize: 50,
 			SortKeys:          false,
 			TimeFormat:        "[15:04:05]",
+			MaxNestedDepth:    20,
 			DebugColor:        Blue,
 			InfoColor:         Green,
 			WarnColor:         Yellow,
@@ -541,7 +549,11 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 		if v.IsNil() {
 			b = nilString()
 		} else {
-			b = h.elementType(t, v.Elem(), l, p)
+			if l >= int(h.opts.MaxNestedDepth) {
+				b = atb(v)
+			} else {
+				b = h.elementType(t, v.Elem(), l, p)
+			}
 		}
 	case reflect.Float32, reflect.Float64:
 		b = cs(atb(v.Float()), fgYellow)
@@ -566,7 +578,11 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 		}
 	case reflect.Interface:
 		v = reflect.ValueOf(v.Interface())
-		b = h.elementType(v.Type(), v, l, p)
+		if l >= int(h.opts.MaxNestedDepth) {
+			b = atb(v)
+		} else {
+			b = h.elementType(v.Type(), v, l, p)
+		}
 	default:
 		b = atb("Unknown type: ")
 		b = append(b, atb(v.Kind())...)
