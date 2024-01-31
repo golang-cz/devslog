@@ -6,11 +6,29 @@ import (
 )
 
 func Test_Color(t *testing.T) {
+	test_GetColor(t)
+
 	b := []byte("Hello")
 	test_ColorCs(t, b)
 	test_ColorCsf(t, b)
 	test_ColorCsb(t, b)
 	test_ColorUl(t, b)
+}
+
+func test_GetColor(t *testing.T) {
+	result := getColor(Black)
+	expected := colors[1].fg
+
+	if !bytes.Equal(expected, result.fg) {
+		t.Errorf("\nExpected: %s\nResult:   %s\nExpected: %[1]q\nResult:   %[2]q", expected, result)
+	}
+
+	result = getColor(Color(20))
+	expected = colors[8].fg
+
+	if !bytes.Equal(expected, result.fg) {
+		t.Errorf("\nExpected: %s\nResult:   %s\nExpected: %[1]q\nResult:   %[2]q", expected, result)
+	}
 }
 
 func test_ColorCs(t *testing.T, b []byte) {
