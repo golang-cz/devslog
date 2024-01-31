@@ -260,6 +260,8 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 
 		k := cs([]byte(a.Key), fgMagenta)
 		v := []byte(a.Value.String())
+		vo := v
+		vs := v
 		m := []byte(" ")
 
 		switch a.Value.Kind() {
@@ -281,13 +283,11 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 					v = []byte(strings.ReplaceAll(string(v), "\n", "\n"+strings.Repeat(" ", count)))
 				}
 			}
-
 		case slog.KindTime, slog.KindDuration:
 			m = cs([]byte("@"), fgCyan)
 			v = cs(v, fgCyan)
 		case slog.KindAny:
 			any := a.Value.Any()
-
 			if err, ok := any.(error); ok {
 				m = cs([]byte("E"), fgRed)
 				v = h.formatError(err, l)
@@ -300,9 +300,9 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				break
 			}
 
-			if dur, ok := any.(*time.Duration); ok {
+			if d, ok := any.(*time.Duration); ok {
 				m = cs([]byte("@"), fgCyan)
-				v = cs([]byte(dur.String()), fgCyan)
+				v = cs([]byte(d.String()), fgCyan)
 				break
 			}
 
@@ -319,7 +319,8 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				break
 			}
 
-			ut, uv := h.reducePointerTypeValue(at, av)
+			ut, uv, ptrs := h.reducePointerTypeValue(at, av)
+			v = bytes.Repeat(cs([]byte("*"), fgRed), ptrs)
 
 			switch ut.Kind() {
 			case reflect.Array:
@@ -336,16 +337,20 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				v = h.formatStruct(at, av, 0)
 			case reflect.Float32, reflect.Float64:
 				m = cs([]byte("#"), fgYellow)
-				v = cs(atb(uv.Float()), fgYellow)
+				vs = atb(uv.Float())
+				v = append(v, cs(vs, fgYellow)...)
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				m = cs([]byte("#"), fgYellow)
-				v = cs(atb(uv.Int()), fgYellow)
+				vs = atb(uv.Int())
+				v = append(v, cs(vs, fgYellow)...)
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 				m = cs([]byte("#"), fgYellow)
-				v = cs(atb(uv.Uint()), fgYellow)
+				vs = atb(uv.Uint())
+				v = append(v, cs(vs, fgYellow)...)
 			case reflect.Bool:
 				m = cs([]byte("#"), fgRed)
-				v = cs(atb(uv.Bool()), fgRed)
+				vs = atb(uv.Bool())
+				v = append(v, cs(vs, fgRed)...)
 			case reflect.String:
 				s := uv.String()
 				if len(s) == 0 {
@@ -375,9 +380,17 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 		b = append(b, ' ')
 		b = append(b, k...)
 		b = append(b, bytes.Repeat([]byte(" "), pc-len(k))...)
-		b = append(b, ':')
-		b = append(b, ' ')
+		b = append(b, ':', ' ')
 		b = append(b, v...)
+
+		stringer := reflect.ValueOf(a.Value).MethodByName("String")
+		if stringer.IsValid() && !bytes.Equal(vo, vs) {
+			s := []byte(` "`)
+			s = append(s, []byte(a.Value.String())...)
+			s = append(s, '"')
+			b = append(b, csf(s, fgWhite)...)
+		}
+
 		if a.Value.Kind() != slog.KindGroup {
 			b = append(b, '\n')
 		}
@@ -393,7 +406,7 @@ func (h *developHandler) isURL(u []byte) bool {
 
 func (h *developHandler) formatError(err error, l int) (b []byte) {
 	if err == nil {
-		b = append(b, ul(cs([]byte("<nil>"), fgRed))...)
+		b = append(b, ul(cs(nilString(), fgRed))...)
 		return
 	}
 
@@ -433,7 +446,7 @@ func (h *developHandler) formatError(err error, l int) (b []byte) {
 
 func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int) (b []byte) {
 	ts := h.buildTypeString(st.String())
-	_, sv = h.reducePointerTypeValue(st, sv)
+	_, sv, _ = h.reducePointerTypeValue(st, sv)
 
 	b = append(b, cs([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
 	b = append(b, ' ')
@@ -471,7 +484,7 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int) (
 
 func (h *developHandler) formatMap(st reflect.Type, sv reflect.Value, l int) (b []byte) {
 	ts := h.buildTypeString(st.String())
-	_, sv = h.reducePointerTypeValue(st, sv)
+	_, sv, _ = h.reducePointerTypeValue(st, sv)
 
 	pc := h.mapKeyPadding(sv, &fgGreen)
 	pr := h.mapKeyPadding(sv, nil)
@@ -500,7 +513,7 @@ func (h *developHandler) formatMap(st reflect.Type, sv reflect.Value, l int) (b 
 func (h *developHandler) formatStruct(st reflect.Type, sv reflect.Value, l int) (b []byte) {
 	b = h.buildTypeString(st.String())
 
-	_, sv = h.reducePointerTypeValue(st, sv)
+	_, sv, _ = h.reducePointerTypeValue(st, sv)
 	pc := h.structKeyPadding(sv, &fgGreen)
 	pr := h.structKeyPadding(sv, nil)
 
@@ -650,20 +663,24 @@ func (h *developHandler) reducePointerValue(v reflect.Value) reflect.Value {
 	return v
 }
 
-func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value) (reflect.Type, reflect.Value) {
+func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value) (reflect.Type, reflect.Value, int) {
 	if t == nil {
-		return t, v
+		return t, v, 0
 	}
 
+	var ptr int
 	for v.Kind() == reflect.Pointer {
 		v = v.Elem()
 		if isNilValue(v) {
-			return t, v
+			return t, v, ptr
 		}
+
 		t = v.Type()
+
+		ptr++
 	}
 
-	return t, v
+	return t, v, ptr
 }
 
 // Any to []byte using fmt.Sprintf
