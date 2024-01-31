@@ -679,21 +679,23 @@ func test_Struct(t *testing.T, o *Options) {
 	logger := slog.New(NewHandler(w, o))
 
 	type StructTest struct {
-		Slice   []int
-		Map     map[int]int
-		Struct  struct{ B bool }
-		SliceP  *[]int
-		MapP    *map[int]int
-		StructP *struct{ B bool }
+		Slice      []int
+		Map        map[int]int
+		Struct     struct{ B bool }
+		SliceP     *[]int
+		MapP       *map[int]int
+		StructP    *struct{ B bool }
+		unexported int
 	}
 
 	s := &StructTest{
-		Slice:   []int{},
-		Map:     map[int]int{},
-		Struct:  struct{ B bool }{},
-		SliceP:  &[]int{},
-		MapP:    &map[int]int{},
-		StructP: &struct{ B bool }{},
+		Slice:      []int{},
+		Map:        map[int]int{},
+		Struct:     struct{ B bool }{},
+		SliceP:     &[]int{},
+		MapP:       &map[int]int{},
+		StructP:    &struct{ B bool }{},
+		unexported: 5,
 	}
 
 	logger.Info("msg",
