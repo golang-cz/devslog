@@ -65,7 +65,7 @@ var colors = []color{
 }
 
 func getColor(c Color) color {
-	if c >= 0 && int(c) < len(colors) {
+	if int(c) < len(colors) {
 		return colors[c]
 	}
 
