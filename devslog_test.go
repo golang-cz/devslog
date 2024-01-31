@@ -508,20 +508,24 @@ func test_IntFloat(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
-	i := 1
 	f := 1.21
+	fp := &f
+	i := 1
+	ip := &i
 	logger.Info("msg",
-		slog.Any("i", i),
 		slog.Any("f", f),
-		slog.Any("ip", &i),
-		slog.Any("fp", &f),
+		slog.Any("fp", fp),
+		slog.Any("i", i),
+		slog.Any("ip", ip),
 	)
 
-	expected := []byte(
-		"\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mf\x1b[0m : \x1b[33m1.21\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mfp\x1b[0m: \x1b[31m*\x1b[0m\x1b[33m1.21\x1b[0m\x1b[2m\x1b[37m \"0xc000012b88\"\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mi\x1b[0m : \x1b[33m1\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mip\x1b[0m: \x1b[31m*\x1b[0m\x1b[33m1\x1b[0m\x1b[2m\x1b[37m \"0xc000012b80\"\x1b[0m\n\n",
+	expected := fmt.Sprintf(
+		"\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mf\x1b[0m : \x1b[33m1.21\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mfp\x1b[0m: \x1b[31m*\x1b[0m\x1b[33m1.21\x1b[0m\x1b[2m\x1b[37m \"%v\"\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mi\x1b[0m : \x1b[33m1\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mip\x1b[0m: \x1b[31m*\x1b[0m\x1b[33m1\x1b[0m\x1b[2m\x1b[37m \"%v\"\x1b[0m\n\n",
+		fp,
+		ip,
 	)
 
-	if !bytes.Equal(w.WrittenData, expected) {
+	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
@@ -531,15 +535,15 @@ func test_Bool(t *testing.T, o *Options) {
 	logger := slog.New(NewHandler(w, o))
 
 	b := true
-
+	bp := &b
 	logger.Info("msg",
 		slog.Any("b", b),
-		slog.Any("bp", &b),
+		slog.Any("bp", bp),
 	)
 
-	expected := []byte("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[31m#\x1b[0m \x1b[35mb\x1b[0m : \x1b[31mtrue\x1b[0m\n\x1b[31m#\x1b[0m \x1b[35mbp\x1b[0m: \x1b[31m*\x1b[0m\x1b[31mtrue\x1b[0m\x1b[2m\x1b[37m \"0xc000012e18\"\x1b[0m\n\n")
+	expected := fmt.Sprintf("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[31m#\x1b[0m \x1b[35mb\x1b[0m : \x1b[31mtrue\x1b[0m\n\x1b[31m#\x1b[0m \x1b[35mbp\x1b[0m: \x1b[31m*\x1b[0m\x1b[31mtrue\x1b[0m\x1b[2m\x1b[37m \"%v\"\x1b[0m\n\n", bp)
 
-	if !bytes.Equal(w.WrittenData, expected) {
+	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
