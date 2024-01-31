@@ -505,6 +505,9 @@ func (h *developHandler) formatStruct(st reflect.Type, sv reflect.Value, l int) 
 	pr := h.structKeyPadding(sv, nil)
 
 	for i := 0; i < sv.NumField(); i++ {
+		if !sv.Type().Field(i).IsExported() {
+			continue
+		}
 		v := sv.Field(i)
 		t := v.Type()
 
@@ -624,6 +627,9 @@ func (h *developHandler) mapKeyPadding(rv reflect.Value, fgColor *foregroundColo
 func (h *developHandler) structKeyPadding(sv reflect.Value, fgColor *foregroundColor) (p int) {
 	st := sv.Type()
 	for i := 0; i < sv.NumField(); i++ {
+		if !st.Field(i).IsExported() {
+			continue
+		}
 		c := len(st.Field(i).Name)
 		if fgColor != nil {
 			c = len(cs([]byte(st.Field(i).Name), *fgColor))
