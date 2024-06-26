@@ -58,6 +58,9 @@ type Options struct {
 
 	// Max stack trace frames when unwrapping errors
 	MaxErrorStackTrace uint
+
+	// Use method String() for formatting value
+	StringerFormatter bool
 }
 
 type groupOrAttrs struct {
@@ -311,6 +314,13 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 				break
 			}
 
+			if h.opts.StringerFormatter {
+				if stringer, ok := av.(fmt.Stringer); ok {
+					v = []byte(stringer.String())
+					break
+				}
+			}
+
 			avt := reflect.TypeOf(av)
 			avv := reflect.ValueOf(av)
 			if avt == nil {
@@ -545,6 +555,12 @@ var marshalTextInterface = reflect.TypeOf((*encoding.TextMarshaler)(nil)).Elem()
 func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p int) (b []byte) {
 	if t.Implements(marshalTextInterface) {
 		return atb(v)
+	}
+
+	if h.opts.StringerFormatter {
+		if stringer, ok := v.Interface().(fmt.Stringer); ok {
+			return []byte(stringer.String())
+		}
 	}
 
 	switch v.Kind() {
