@@ -38,6 +38,7 @@ opts := &devslog.Options{
 	TimeFormat:        "[04:05]",
 	NewLineAfterLog:   true,
 	DebugColor:        devslog.Magenta,
+	StringerFormatter: true,
 }
 
 logger := slog.New(devslog.NewHandler(os.Stdout, opts))
@@ -61,6 +62,7 @@ opts := &devslog.Options{
 	MaxSlicePrintSize: 4,
 	SortKeys:          true,
 	NewLineAfterLog:   true,
+	StringerFormatter: true,
 }
 
 logger := slog.New(devslog.NewHandler(os.Stdout, opts))
@@ -85,6 +87,7 @@ if production {
 		MaxSlicePrintSize: 10,
 		SortKeys:          true,
 		NewLineAfterLog:   true,
+		StringerFormatter: true,
 	}
 
 	logger = slog.New(devslog.NewHandler(os.Stdout, opts))
@@ -107,3 +110,4 @@ slog.SetDefault(logger)
 | WarnColor          | Color for Warn level                                           | devslog.Yellow | devslog.Color (uint) |
 | ErrorColor         | Color for Error level                                          | devslog.Red    | devslog.Color (uint) |
 | MaxErrorStackTrace | Max stack trace frames for errors                              | 0              | uint                 |
+| StringerFormatter  | Use Stringer interface for formatting                          | false          | bool                 |
