@@ -380,7 +380,6 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string) []
 			ga = a.Value.Group()
 			g = append(g, a.Key)
 
-			v = cs([]byte("============"), fgGreen)
 			v = append(v, '\n')
 			v = append(v, h.colorize(nil, ga, l+1, g)...)
 		}
