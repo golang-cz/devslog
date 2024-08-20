@@ -99,10 +99,6 @@ func test_NewHandlerDefaults(t *testing.T) {
 	if h.out == nil {
 		t.Errorf("Expected writer to be initialized")
 	}
-
-	if h.mu == nil {
-		t.Errorf("Expected mutex to be initialized")
-	}
 }
 
 func test_NewHandlerWithOptions(t *testing.T) {

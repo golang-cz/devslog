@@ -21,7 +21,7 @@ import (
 type developHandler struct {
 	opts Options
 	goas []groupOrAttrs
-	mu   *sync.Mutex
+	mu   sync.Mutex
 	out  io.Writer
 }
 
@@ -69,7 +69,7 @@ type groupOrAttrs struct {
 }
 
 func NewHandler(out io.Writer, o *Options) *developHandler {
-	h := &developHandler{out: out, mu: &sync.Mutex{}}
+	h := &developHandler{out: out}
 	if o != nil {
 		h.opts = *o
 
