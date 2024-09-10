@@ -1,14 +1,17 @@
 # 🧻 devslog - Go [slog.Handler](https://pkg.go.dev/log/slog#Handler) for development
- [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/golang-cz/devslog/blob/master/LICENSE)
- [![Go Report Card](https://goreportcard.com/badge/github.com/golang-cz/devslog)](https://goreportcard.com/report/github.com/golang-cz/devslog)
- [![Go Reference](https://pkg.go.dev/badge/github.com/golang-cz/devslog.svg)](https://pkg.go.dev/github.com/golang-cz/devslog)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/golang-cz/devslog/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/golang-cz/devslog)](https://goreportcard.com/report/github.com/golang-cz/devslog)
+[![Go Reference](https://pkg.go.dev/badge/github.com/golang-cz/devslog.svg)](https://pkg.go.dev/github.com/golang-cz/devslog)
 
 `devslog` is a zero dependency structured logging handler for Go's [`log/slog`](https://pkg.go.dev/log/slog) package with pretty and colorful output for developers.
 
 ### Devslog output
+
 ![image](https://github.com/golang-cz/devslog/assets/17728576/cfdc1634-16fe-4dd0-a643-21bf519cd4fe)
 
 #### Compared to
+
 `TextHandler`
 ![image](https://github.com/golang-cz/devslog/assets/17728576/49aab1c0-93ba-409d-8637-a96eeeaaf0e1)
 
@@ -16,12 +19,15 @@
 ![image](https://github.com/golang-cz/devslog/assets/17728576/775af693-2f96-47e8-9190-5ead77b41a27)
 
 ## Install
+
 ```
 go get github.com/golang-cz/devslog@latest
 ```
 
 ## Examples
+
 ### Logger without options
+
 ```go
 logger := slog.New(devslog.NewHandler(os.Stdout, nil))
 
@@ -30,6 +36,7 @@ slog.SetDefault(logger)
 ```
 
 ### Logger with custom options
+
 ```go
 // new logger with options
 opts := &devslog.Options{
@@ -48,7 +55,9 @@ slog.SetDefault(logger)
 ```
 
 ### Logger with default slog options
+
 Handler accepts default [slog.HandlerOptions](https://pkg.go.dev/golang.org/x/exp/slog#HandlerOptions)
+
 ```go
 // slog.HandlerOptions
 slogOpts := &slog.HandlerOptions{
@@ -72,6 +81,7 @@ slog.SetDefault(logger)
 ```
 
 ### Example usage
+
 ```go
 slogOpts := &slog.HandlerOptions{
 	AddSource: true,
@@ -98,8 +108,9 @@ slog.SetDefault(logger)
 ```
 
 ## Options
+
 | Parameter          | Description                                                    | Default        | Value                |
-|--------------------|----------------------------------------------------------------|----------------|----------------------|
+| ------------------ | -------------------------------------------------------------- | -------------- | -------------------- |
 | MaxSlicePrintSize  | Specifies the maximum number of elements to print for a slice. | 50             | uint                 |
 | SortKeys           | Determines if attributes should be sorted by keys.             | false          | bool                 |
 | TimeFormat         | Time format for timestamp.                                     | "[15:04:05]"   | string               |
@@ -111,3 +122,4 @@ slog.SetDefault(logger)
 | ErrorColor         | Color for Error level                                          | devslog.Red    | devslog.Color (uint) |
 | MaxErrorStackTrace | Max stack trace frames for errors                              | 0              | uint                 |
 | StringerFormatter  | Use Stringer interface for formatting                          | false          | bool                 |
+| NoColor            | Disable coloring                                               | false          | bool                 |
