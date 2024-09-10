@@ -64,7 +64,7 @@ var colors = []color{
 	{fgWhite, bgWhite},
 }
 
-func getColor(c Color) color {
+func (h *developHandler) getColor(c Color) color {
 	if int(c) < len(colors) {
 		return colors[c]
 	}
@@ -73,14 +73,22 @@ func getColor(c Color) color {
 }
 
 // Color string foreground
-func cs(b []byte, fgColor foregroundColor) []byte {
+func (h *developHandler) cs(b []byte, fgColor foregroundColor) []byte {
+	if h.opts.NoColor {
+		return b
+	}
+
 	b = append(fgColor, b...)
 	b = append(b, resetColor...)
 	return b
 }
 
 // Color string fainted
-func csf(b []byte, fgColor foregroundColor) []byte {
+func (h *developHandler) csf(b []byte, fgColor foregroundColor) []byte {
+	if h.opts.NoColor {
+		return b
+	}
+
 	b = append(fgColor, b...)
 	b = append(faintColor, b...)
 	b = append(b, resetColor...)
@@ -88,7 +96,11 @@ func csf(b []byte, fgColor foregroundColor) []byte {
 }
 
 // Color string background
-func csb(b []byte, fgColor foregroundColor, bgColor backgroundColor) []byte {
+func (h *developHandler) csb(b []byte, fgColor foregroundColor, bgColor backgroundColor) []byte {
+	if h.opts.NoColor {
+		return b
+	}
+
 	b = append(fgColor, b...)
 	b = append(bgColor, b...)
 	b = append(b, resetColor...)
@@ -96,7 +108,11 @@ func csb(b []byte, fgColor foregroundColor, bgColor backgroundColor) []byte {
 }
 
 // Underline text
-func ul(b []byte) []byte {
+func (h *developHandler) ul(b []byte) []byte {
+	if h.opts.NoColor {
+		return b
+	}
+
 	b = append(underlineColor, b...)
 	b = append(b, resetColor...)
 	return b

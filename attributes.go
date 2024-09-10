@@ -18,12 +18,12 @@ func (a attributes) Less(i, j int) bool {
 	return a[i].Key < a[j].Key
 }
 
-func (a attributes) padding(c foregroundColor) int {
+func (a attributes) padding(c foregroundColor, colorFunction func(b []byte, fgColor foregroundColor) []byte) int {
 	var padding int
 	for _, e := range a {
 		color := len(e.Key)
 		if c != nil {
-			color = len(cs([]byte(e.Key), c))
+			color = len(colorFunction([]byte(e.Key), c))
 		}
 
 		if color > padding {
