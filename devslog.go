@@ -599,8 +599,12 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 			}
 		}
 	case reflect.Interface:
-		v = reflect.ValueOf(v.Interface())
-		b = h.elementType(v.Type(), v, l, p)
+		if v.IsZero() {
+			b = nilString()
+		} else {
+			v = reflect.ValueOf(v.Interface())
+			b = h.elementType(v.Type(), v, l, p)
+		}
 	default:
 		b = atb("Unknown type: ")
 		b = append(b, atb(v.Kind())...)
