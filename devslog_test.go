@@ -77,6 +77,7 @@ func Test_Types(t *testing.T) {
 	test_LogValuerPanic(t, opts)
 	test_Stringer(t, opts)
 	test_StringerInner(t, opts)
+	testNoColor(t, opts)
 }
 
 func test_NewHandlerDefaults(t *testing.T) {
@@ -303,9 +304,10 @@ func test_Source(t *testing.T) {
 		NewLineAfterLog:   true,
 	}
 
-	logger := slog.New(NewHandler(w, opts))
+	h := NewHandler(w, opts)
+	logger := slog.New(h)
 
-	timeString := csf([]byte(time.Now().Format("[15:04]")), fgWhite)
+	timeString := h.csf([]byte(time.Now().Format("[15:04]")), fgWhite)
 	_, filename, l, _ := runtime.Caller(0)
 	logger.Info("message")
 
@@ -427,9 +429,10 @@ func test_ReplaceLevelAttributes(t *testing.T) {
 		NewLineAfterLog:   true,
 	}
 
-	logger := slog.New(NewHandler(w, opts))
+	h := NewHandler(w, opts)
+	logger := slog.New(h)
 
-	timeString := csf([]byte(time.Now().Format("[15:04]")), fgWhite)
+	timeString := h.csf([]byte(time.Now().Format("[15:04]")), fgWhite)
 	ctx := context.Background()
 	logger.Log(ctx, LevelEmergency, "missing pilots")
 	logger.Error("failed to start engines", "err", "missing fuel")
@@ -878,6 +881,25 @@ func test_StringerInner(t *testing.T, o *Options) {
 	expected := []byte(
 		"\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mtest_stringer_inner\x1b[0m\n\x1b[33mS\x1b[0m \x1b[35mitem1\x1b[0m: \x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33mS\x1b[0m\x1b[33mt\x1b[0m\x1b[33mr\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mg\x1b[0m\x1b[33me\x1b[0m\x1b[33mr\x1b[0m\x1b[33mE\x1b[0m\x1b[33mx\x1b[0m\x1b[33ma\x1b[0m\x1b[33mm\x1b[0m\x1b[33mp\x1b[0m\x1b[33ml\x1b[0m\x1b[33me\x1b[0m\x1b[33m2\x1b[0m\n    \x1b[32mInner\x1b[0m: A: test\n    \x1b[32mOther\x1b[0m: \x1b[33m42\x1b[0m\n\n",
 	)
+
+	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testNoColor(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	o.NoColor = true
+	logger := slog.New(NewHandler(w, o))
+
+	logger.Info("msg",
+		slog.Any("i", 1),
+		slog.Any("f", 2.2),
+		slog.Any("s", "someString"),
+		slog.Any("m", map[int]string{3: "three", 4: "four"}),
+	)
+
+	expected := []byte("[]  INFO  msg\n# f: 2.2\n# i: 1\nM m: 2 map[int]string\n    3: three\n    4: four\n  s: someString\n\n")
 
 	if !bytes.Equal(w.WrittenData, expected) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)

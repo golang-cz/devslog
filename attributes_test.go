@@ -92,7 +92,8 @@ func test_AttributesPadding(t *testing.T) {
 		slog.Attr{Key: "key2", Value: someValue},
 	}
 
-	padding := attrs.padding(fgMagenta)
+	h := NewHandler(nil, nil)
+	padding := attrs.padding(fgMagenta, h.cs)
 
 	expectedPadding := 13
 	if padding != expectedPadding {
