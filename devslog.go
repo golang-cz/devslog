@@ -603,7 +603,7 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 		}
 	case reflect.Interface:
 		if v.IsZero() {
-			b = nilString()
+			b = h.nilString()
 		} else {
 			v = reflect.ValueOf(v.Interface())
 			b = h.elementType(v.Type(), v, l, p)
