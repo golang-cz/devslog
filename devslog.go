@@ -470,10 +470,7 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int) (
 	b = append(b, h.cs([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
 	b = append(b, ' ')
 	b = append(b, ts...)
-	d := len(strconv.Itoa(sv.Len()))
-	if len(strconv.Itoa(int(h.opts.MaxSlicePrintSize))) < d {
-		d = len(strconv.Itoa(int(h.opts.MaxSlicePrintSize)))
-	}
+	d := min(len(strconv.Itoa(int(h.opts.MaxSlicePrintSize))), len(strconv.Itoa(sv.Len())))
 
 	for i := 0; i < sv.Len(); i++ {
 		if i == int(h.opts.MaxSlicePrintSize) {
@@ -718,7 +715,7 @@ func (h *developHandler) reducePointerTypeValue(t reflect.Type, v reflect.Value)
 
 // Any to []byte using fmt.Sprintf
 func atb(a any) []byte {
-	return []byte(fmt.Sprintf("%v", a))
+	return fmt.Appendf(nil, "%v", a)
 }
 
 func isNilValue(v reflect.Value) bool {

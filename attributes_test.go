@@ -6,15 +6,15 @@ import (
 )
 
 func Test_Attributes(t *testing.T) {
-	test_AttributesLen(t)
-	test_AttributesSwap(t)
-	test_AttributesLess(t)
-	test_AttributesLessGroupTrue(t)
-	test_AttributesLessGroupFalse(t)
-	test_AttributesPadding(t)
+	testAttributesLen(t)
+	testAttributesSwap(t)
+	testAttributesLess(t)
+	testAttributesLessGroupTrue(t)
+	testAttributesLessGroupFalse(t)
+	testAttributesPadding(t)
 }
 
-func test_AttributesLen(t *testing.T) {
+func testAttributesLen(t *testing.T) {
 	someValue := slog.StringValue("value")
 	attrs := attributes{
 		slog.Attr{Key: "key1", Value: someValue},
@@ -30,7 +30,7 @@ func test_AttributesLen(t *testing.T) {
 	}
 }
 
-func test_AttributesSwap(t *testing.T) {
+func testAttributesSwap(t *testing.T) {
 	attr1 := slog.Attr{Key: "key1", Value: slog.StringValue("value")}
 	attr2 := slog.Attr{Key: "key2", Value: slog.StringValue("value")}
 	attrs := attributes{
@@ -45,7 +45,7 @@ func test_AttributesSwap(t *testing.T) {
 	}
 }
 
-func test_AttributesLess(t *testing.T) {
+func testAttributesLess(t *testing.T) {
 	someValue := slog.StringValue("value")
 	attrs := attributes{
 		slog.Attr{Key: "key1", Value: someValue},
@@ -59,7 +59,7 @@ func test_AttributesLess(t *testing.T) {
 	}
 }
 
-func test_AttributesLessGroupTrue(t *testing.T) {
+func testAttributesLessGroupTrue(t *testing.T) {
 	attrs := attributes{
 		slog.String("key1", "someValue"),
 		slog.Group("key2", slog.String("someString", "someValue")),
@@ -72,7 +72,7 @@ func test_AttributesLessGroupTrue(t *testing.T) {
 	}
 }
 
-func test_AttributesLessGroupFalse(t *testing.T) {
+func testAttributesLessGroupFalse(t *testing.T) {
 	attrs := attributes{
 		slog.Group("key1", slog.String("someString", "someValue")),
 		slog.String("key2", "someValue"),
@@ -85,7 +85,7 @@ func test_AttributesLessGroupFalse(t *testing.T) {
 	}
 }
 
-func test_AttributesPadding(t *testing.T) {
+func testAttributesPadding(t *testing.T) {
 	someValue := slog.StringValue("value")
 	attrs := attributes{
 		slog.Attr{Key: "key1", Value: someValue},
