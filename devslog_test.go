@@ -11,41 +11,41 @@ import (
 	"time"
 )
 
-func Test_NewHandler(t *testing.T) {
-	test_NewHandlerDefaults(t)
-	test_NewHandlerWithOptions(t)
-	test_NewHandlerWithNilOptions(t)
-	test_NewHandlerWithNilSlogHandlerOptions(t)
+func TestNewHandler(t *testing.T) {
+	testNewHandlerDefaults(t)
+	testNewHandlerWithOptions(t)
+	testNewHandlerWithNilOptions(t)
+	testNewHandlerWithNilSlogHandlerOptions(t)
 }
 
-func Test_Methods(t *testing.T) {
-	test_Enabled(t)
-	test_WithGroup(t)
-	test_WithGroupEmpty(t)
-	test_WithAttrs(t)
-	test_WithAttrsEmpty(t)
+func TestMethods(t *testing.T) {
+	testEnabled(t)
+	testWithGroup(t)
+	testWithGroupEmpty(t)
+	testWithAttrs(t)
+	testWithAttrsEmpty(t)
 }
 
-func Test_Levels(t *testing.T) {
-	test_LevelMessageDebug(t)
-	test_LevelMessageInfo(t)
-	test_LevelMessageWarn(t)
-	test_LevelMessageError(t)
+func TestLevels(t *testing.T) {
+	testLevelMessageDebug(t)
+	testLevelMessageInfo(t)
+	testLevelMessageWarn(t)
+	testLevelMessageError(t)
 }
 
-func Test_GroupsAndAttributes(t *testing.T) {
-	test_WithGroups(t)
-	test_WithGroupsEmpty(t)
-	test_WithAttributes(t)
-	test_WithAttributesRaceCondition(t)
+func TestGroupsAndAttributes(t *testing.T) {
+	testWithGroups(t)
+	testWithGroupsEmpty(t)
+	testWithAttributes(t)
+	testWithAttributesRaceCondition()
 }
 
-func Test_SourceAndReplace(t *testing.T) {
-	test_Source(t)
-	test_ReplaceLevelAttributes(t)
+func TestSourceAndReplace(t *testing.T) {
+	testSource(t)
+	testReplaceLevelAttributes(t)
 }
 
-func Test_Types(t *testing.T) {
+func TestTypes(t *testing.T) {
 	slogOpts := &slog.HandlerOptions{
 		AddSource:   false,
 		Level:       slog.LevelDebug,
@@ -61,27 +61,27 @@ func Test_Types(t *testing.T) {
 		StringerFormatter: true,
 	}
 
-	test_String(t, opts)
-	test_IntFloat(t, opts)
-	test_Bool(t, opts)
-	test_Time(t, opts)
-	test_Error(t, opts)
-	test_Slice(t, opts)
-	test_SliceBig(t, opts)
-	test_Map(t, opts)
-	test_MapOfPointers(t, opts)
-	test_MapOfInterface(t, opts)
-	test_Struct(t, opts)
-	test_NilInterface(t, opts)
-	test_Group(t, opts)
-	test_LogValuer(t, opts)
-	test_LogValuerPanic(t, opts)
-	test_Stringer(t, opts)
-	test_StringerInner(t, opts)
+	testString(t, opts)
+	testIntFloat(t, opts)
+	testBool(t, opts)
+	testTime(t, opts)
+	testError(t, opts)
+	testSlice(t, opts)
+	testSliceBig(t, opts)
+	testMap(t, opts)
+	testMapOfPointers(t, opts)
+	testMapOfInterface(t, opts)
+	testStruct(t, opts)
+	testNilInterface(t, opts)
+	testGroup(t, opts)
+	testLogValuer(t, opts)
+	testLogValuerPanic(t, opts)
+	testStringer(t, opts)
+	testStringerInner(t, opts)
 	testNoColor(t, opts)
 }
 
-func test_NewHandlerDefaults(t *testing.T) {
+func testNewHandlerDefaults(t *testing.T) {
 	opts := &Options{
 		HandlerOptions: &slog.HandlerOptions{},
 	}
@@ -104,7 +104,7 @@ func test_NewHandlerDefaults(t *testing.T) {
 	}
 }
 
-func test_NewHandlerWithOptions(t *testing.T) {
+func testNewHandlerWithOptions(t *testing.T) {
 	handlerOpts := &Options{
 		HandlerOptions:    &slog.HandlerOptions{Level: slog.LevelWarn},
 		MaxSlicePrintSize: 10,
@@ -125,10 +125,10 @@ func test_NewHandlerWithOptions(t *testing.T) {
 	}
 }
 
-func test_NewHandlerWithNilOptions(t *testing.T) {
+func testNewHandlerWithNilOptions(t *testing.T) {
 	h := NewHandler(nil, nil)
 
-	if h.opts.HandlerOptions == nil || h.opts.HandlerOptions.Level != slog.LevelInfo {
+	if h.opts.HandlerOptions == nil || h.opts.Level != slog.LevelInfo {
 		t.Errorf("Expected HandlerOptions to be initialized with default level")
 	}
 
@@ -141,11 +141,11 @@ func test_NewHandlerWithNilOptions(t *testing.T) {
 	}
 }
 
-func test_NewHandlerWithNilSlogHandlerOptions(t *testing.T) {
+func testNewHandlerWithNilSlogHandlerOptions(t *testing.T) {
 	opts := &Options{}
 	h := NewHandler(nil, opts)
 
-	if h.opts.HandlerOptions == nil || h.opts.HandlerOptions.Level != slog.LevelInfo {
+	if h.opts.HandlerOptions == nil || h.opts.Level != slog.LevelInfo {
 		t.Errorf("Expected HandlerOptions to be initialized with default level")
 	}
 
@@ -158,7 +158,7 @@ func test_NewHandlerWithNilSlogHandlerOptions(t *testing.T) {
 	}
 }
 
-func test_Enabled(t *testing.T) {
+func testEnabled(t *testing.T) {
 	h := NewHandler(nil, nil)
 	ctx := context.Background()
 
@@ -171,7 +171,7 @@ func test_Enabled(t *testing.T) {
 	}
 }
 
-func test_WithGroup(t *testing.T) {
+func testWithGroup(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithGroup("myGroup")
 
@@ -180,7 +180,7 @@ func test_WithGroup(t *testing.T) {
 	}
 }
 
-func test_WithGroupEmpty(t *testing.T) {
+func testWithGroupEmpty(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithGroup("")
 
@@ -189,7 +189,7 @@ func test_WithGroupEmpty(t *testing.T) {
 	}
 }
 
-func test_WithAttrs(t *testing.T) {
+func testWithAttrs(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithAttrs([]slog.Attr{slog.String("key", "value")})
 
@@ -198,7 +198,7 @@ func test_WithAttrs(t *testing.T) {
 	}
 }
 
-func test_WithAttrsEmpty(t *testing.T) {
+func testWithAttrsEmpty(t *testing.T) {
 	h := NewHandler(nil, nil)
 	h2 := h.WithAttrs([]slog.Attr{})
 
@@ -207,7 +207,7 @@ func test_WithAttrsEmpty(t *testing.T) {
 	}
 }
 
-func test_LevelMessageDebug(t *testing.T) {
+func testLevelMessageDebug(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -225,7 +225,7 @@ func test_LevelMessageDebug(t *testing.T) {
 	}
 }
 
-func test_LevelMessageInfo(t *testing.T) {
+func testLevelMessageInfo(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -243,7 +243,7 @@ func test_LevelMessageInfo(t *testing.T) {
 	}
 }
 
-func test_LevelMessageWarn(t *testing.T) {
+func testLevelMessageWarn(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -261,7 +261,7 @@ func test_LevelMessageWarn(t *testing.T) {
 	}
 }
 
-func test_LevelMessageError(t *testing.T) {
+func testLevelMessageError(t *testing.T) {
 	h := NewHandler(nil, nil)
 	buf := make([]byte, 0)
 	record := &slog.Record{
@@ -288,7 +288,7 @@ type MockWriter struct {
 	WrittenData []byte
 }
 
-func test_Source(t *testing.T) {
+func testSource(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -319,7 +319,7 @@ func test_Source(t *testing.T) {
 	}
 }
 
-func test_WithGroups(t *testing.T) {
+func testWithGroups(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -348,7 +348,7 @@ func test_WithGroups(t *testing.T) {
 	}
 }
 
-func test_WithGroupsEmpty(t *testing.T) {
+func testWithGroupsEmpty(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -368,14 +368,14 @@ func test_WithGroupsEmpty(t *testing.T) {
 
 	logger.Info("My INFO message")
 
-	expected := fmt.Sprint("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n\n")
+	expected := "\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n\n"
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
 
-func test_WithAttributes(t *testing.T) {
+func testWithAttributes(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -396,14 +396,14 @@ func test_WithAttributes(t *testing.T) {
 
 	logger.Info("My INFO message")
 
-	expected := fmt.Sprint("\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n  \x1b[35ma\x1b[0m: 1\n\n")
+	expected := "\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mMy INFO message\x1b[0m\n  \x1b[35ma\x1b[0m: 1\n\n"
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
 
-func test_WithAttributesRaceCondition(t *testing.T) {
+func testWithAttributesRaceCondition() {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -441,7 +441,7 @@ const (
 	LevelEmergency = slog.Level(12)
 )
 
-func test_ReplaceLevelAttributes(t *testing.T) {
+func testReplaceLevelAttributes(t *testing.T) {
 	w := &MockWriter{}
 
 	slogOpts := &slog.HandlerOptions{
@@ -514,7 +514,7 @@ func replaceAttributes(groups []string, a slog.Attr) slog.Attr {
 	return a
 }
 
-func test_String(t *testing.T, o *Options) {
+func testString(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -536,7 +536,7 @@ func test_String(t *testing.T, o *Options) {
 	}
 }
 
-func test_IntFloat(t *testing.T, o *Options) {
+func testIntFloat(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -562,7 +562,7 @@ func test_IntFloat(t *testing.T, o *Options) {
 	}
 }
 
-func test_Bool(t *testing.T, o *Options) {
+func testBool(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -580,7 +580,7 @@ func test_Bool(t *testing.T, o *Options) {
 	}
 }
 
-func test_Time(t *testing.T, o *Options) {
+func testTime(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -604,7 +604,7 @@ func test_Time(t *testing.T, o *Options) {
 	}
 }
 
-func test_Error(t *testing.T, o *Options) {
+func testError(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -625,7 +625,7 @@ func test_Error(t *testing.T, o *Options) {
 	}
 }
 
-func test_Slice(t *testing.T, o *Options) {
+func testSlice(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -644,7 +644,7 @@ func test_Slice(t *testing.T, o *Options) {
 	}
 }
 
-func test_SliceBig(t *testing.T, o *Options) {
+func testSliceBig(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -666,7 +666,7 @@ func test_SliceBig(t *testing.T, o *Options) {
 	}
 }
 
-func test_Map(t *testing.T, o *Options) {
+func testMap(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -688,7 +688,7 @@ func test_Map(t *testing.T, o *Options) {
 	}
 }
 
-func test_MapOfPointers(t *testing.T, o *Options) {
+func testMapOfPointers(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -708,7 +708,7 @@ func test_MapOfPointers(t *testing.T, o *Options) {
 	}
 }
 
-func test_MapOfInterface(t *testing.T, o *Options) {
+func testMapOfInterface(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -730,7 +730,7 @@ func test_MapOfInterface(t *testing.T, o *Options) {
 	}
 }
 
-func test_Struct(t *testing.T, o *Options) {
+func testStruct(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -767,7 +767,7 @@ func test_Struct(t *testing.T, o *Options) {
 	}
 }
 
-func test_NilInterface(t *testing.T, o *Options) {
+func testNilInterface(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -790,7 +790,7 @@ func test_NilInterface(t *testing.T, o *Options) {
 	}
 }
 
-func test_Group(t *testing.T, o *Options) {
+func testGroup(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 
@@ -820,7 +820,7 @@ func (item logValuerExample1) LogValue() slog.Value {
 	)
 }
 
-func test_LogValuer(t *testing.T, o *Options) {
+func testLogValuer(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 	item1 := logValuerExample1{
@@ -847,7 +847,7 @@ func (item logValuerExample2) LogValue() slog.Value {
 	panic("log valuer paniced")
 }
 
-func test_LogValuerPanic(t *testing.T, o *Options) {
+func testLogValuerPanic(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 	item1 := logValuerExample2{
@@ -872,7 +872,7 @@ func (item logStringerExample1) String() string {
 	return fmt.Sprintf("A: %s", item.A)
 }
 
-func test_Stringer(t *testing.T, o *Options) {
+func testStringer(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 	item1 := logStringerExample1{
@@ -894,7 +894,7 @@ type logStringerExample2 struct {
 	Other int
 }
 
-func test_StringerInner(t *testing.T, o *Options) {
+func testStringerInner(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	logger := slog.New(NewHandler(w, o))
 	item1 := logStringerExample2{

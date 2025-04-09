@@ -7,16 +7,16 @@ import (
 
 func Test_Color(t *testing.T) {
 	h := NewHandler(nil, nil)
-	test_GetColor(t, h)
+	testGetColor(t, h)
 
 	b := []byte("Hello")
-	test_ColorCs(t, b, h)
-	test_ColorCsf(t, b, h)
-	test_ColorCsb(t, b, h)
-	test_ColorUl(t, b, h)
+	testColorCs(t, b, h)
+	testColorCsf(t, b, h)
+	testColorCsb(t, b, h)
+	testColorUl(t, b, h)
 }
 
-func test_GetColor(t *testing.T, h *developHandler) {
+func testGetColor(t *testing.T, h *developHandler) {
 	result := h.getColor(Black)
 	expected := colors[1].fg
 
@@ -32,7 +32,7 @@ func test_GetColor(t *testing.T, h *developHandler) {
 	}
 }
 
-func test_ColorCs(t *testing.T, b []byte, h *developHandler) {
+func testColorCs(t *testing.T, b []byte, h *developHandler) {
 	result := h.cs(b, fgGreen)
 
 	expected := []byte("\x1b[32mHello\x1b[0m")
@@ -41,7 +41,7 @@ func test_ColorCs(t *testing.T, b []byte, h *developHandler) {
 	}
 }
 
-func test_ColorCsf(t *testing.T, b []byte, h *developHandler) {
+func testColorCsf(t *testing.T, b []byte, h *developHandler) {
 	result := h.csf(b, fgBlue)
 
 	expected := []byte("\x1b[2m\x1b[34mHello\x1b[0m")
@@ -50,7 +50,7 @@ func test_ColorCsf(t *testing.T, b []byte, h *developHandler) {
 	}
 }
 
-func test_ColorCsb(t *testing.T, b []byte, h *developHandler) {
+func testColorCsb(t *testing.T, b []byte, h *developHandler) {
 	result := h.csb(b, fgYellow, bgRed)
 
 	expected := []byte("\x1b[41m\x1b[33mHello\x1b[0m")
@@ -59,7 +59,7 @@ func test_ColorCsb(t *testing.T, b []byte, h *developHandler) {
 	}
 }
 
-func test_ColorUl(t *testing.T, b []byte, h *developHandler) {
+func testColorUl(t *testing.T, b []byte, h *developHandler) {
 	result := h.ul(b)
 
 	expected := []byte("\x1b[4mHello\x1b[0m")
