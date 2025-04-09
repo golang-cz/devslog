@@ -37,6 +37,7 @@ func Test_GroupsAndAttributes(t *testing.T) {
 	test_WithGroups(t)
 	test_WithGroupsEmpty(t)
 	test_WithAttributes(t)
+	test_WithAttributesRaceCondition(t)
 }
 
 func Test_SourceAndReplace(t *testing.T) {
@@ -400,6 +401,34 @@ func test_WithAttributes(t *testing.T) {
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
+}
+
+func test_WithAttributesRaceCondition(t *testing.T) {
+	w := &MockWriter{}
+
+	slogOpts := &slog.HandlerOptions{
+		AddSource: false,
+		Level:     slog.LevelDebug,
+	}
+
+	opts := &Options{
+		HandlerOptions:    slogOpts,
+		MaxSlicePrintSize: 4,
+		SortKeys:          true,
+		TimeFormat:        "[]",
+		NewLineAfterLog:   true,
+	}
+
+	logger := slog.New(NewHandler(w, opts))
+
+	go func() {
+		as := []slog.Attr{slog.Any("a", "1")}
+		logger.Handler().WithAttrs(as)
+	}()
+
+	go func() {
+		logger.Info("INFO message")
+	}()
 }
 
 const (
