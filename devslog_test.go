@@ -79,6 +79,7 @@ func TestTypes(t *testing.T) {
 	testStringer(t, opts)
 	testStringerInner(t, opts)
 	testNoColor(t, opts)
+	testInfinite(t, opts)
 }
 
 func testNewHandlerDefaults(t *testing.T) {
@@ -920,6 +921,7 @@ func testNoColor(t *testing.T, o *Options) {
 	w := &MockWriter{}
 	o.NoColor = true
 	logger := slog.New(NewHandler(w, o))
+	o.NoColor = false
 
 	logger.Info("msg",
 		slog.Any("i", 1),
@@ -931,6 +933,36 @@ func testNoColor(t *testing.T, o *Options) {
 	expected := []byte("[]  INFO  msg\n# f: 2.2\n# i: 1\nM m: 2 map[int]string\n    3: three\n    4: four\n  s: someString\n\n")
 
 	if !bytes.Equal(w.WrittenData, expected) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testInfinite(t *testing.T, o *Options) {
+	w := &MockWriter{}
+	logger := slog.New(NewHandler(w, o))
+
+	type Infinite struct {
+		I *Infinite
+	}
+
+	v1 := Infinite{}
+	v2 := Infinite{}
+	v3 := Infinite{}
+
+	v1.I = &v2
+	v2.I = &v3
+	v3.I = &v1
+
+	logger.Info("msg",
+		slog.Any("i", v1),
+	)
+
+	expected := fmt.Sprintf(
+		"\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33mS\x1b[0m \x1b[35mi\x1b[0m: \x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n    \x1b[32mI\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n      \x1b[32mI\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n        \x1b[32mI\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n          \x1b[32mI\x1b[0m: &{%p}\n\n",
+		v2.I,
+	)
+
+	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
 	}
 }
