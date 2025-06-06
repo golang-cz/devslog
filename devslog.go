@@ -64,6 +64,9 @@ type Options struct {
 
 	// Disable coloring
 	NoColor bool
+
+	// Keep same color for whole source info, helpful when you want to open the line of code from terminal, but the ANSI coloring codes are in link itself
+	SameSourceInfoColor bool
 }
 
 type groupOrAttrs struct {
@@ -180,9 +183,15 @@ func (h *developHandler) formatSourceInfo(b []byte, r *slog.Record) []byte {
 		f, _ := runtime.CallersFrames([]uintptr{r.PC}).Next()
 		b = append(b, h.cs([]byte("@@@"), fgBlue)...)
 		b = append(b, ' ')
-		b = append(b, h.ul(h.cs([]byte(f.File), fgYellow))...)
-		b = append(b, ':')
-		b = append(b, h.cs([]byte(strconv.Itoa(f.Line)), fgRed)...)
+
+		if h.opts.SameSourceInfoColor {
+			b = append(b, h.ul(h.cs(append(append([]byte(f.File), ':'), []byte(strconv.Itoa(f.Line))...), fgYellow))...)
+		} else {
+			b = append(b, h.ul(h.cs([]byte(f.File), fgYellow))...)
+			b = append(b, ':')
+			b = append(b, h.cs([]byte(strconv.Itoa(f.Line)), fgRed)...)
+		}
+
 		b = append(b, '\n')
 	}
 

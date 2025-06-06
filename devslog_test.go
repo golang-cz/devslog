@@ -80,6 +80,7 @@ func TestTypes(t *testing.T) {
 	testStringerInner(t, opts)
 	testNoColor(t, opts)
 	testInfinite(t, opts)
+	testSameSourceInfoColor(t)
 }
 
 func testNewHandlerDefaults(t *testing.T) {
@@ -960,6 +961,38 @@ func testInfinite(t *testing.T, o *Options) {
 	expected := fmt.Sprintf(
 		"\x1b[2m\x1b[37m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33mS\x1b[0m \x1b[35mi\x1b[0m: \x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n    \x1b[32mI\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n      \x1b[32mI\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n        \x1b[32mI\x1b[0m: \x1b[31m*\x1b[0m\x1b[33md\x1b[0m\x1b[33me\x1b[0m\x1b[33mv\x1b[0m\x1b[33ms\x1b[0m\x1b[33ml\x1b[0m\x1b[33mo\x1b[0m\x1b[33mg\x1b[0m\x1b[33m.\x1b[0m\x1b[33mI\x1b[0m\x1b[33mn\x1b[0m\x1b[33mf\x1b[0m\x1b[33mi\x1b[0m\x1b[33mn\x1b[0m\x1b[33mi\x1b[0m\x1b[33mt\x1b[0m\x1b[33me\x1b[0m\n          \x1b[32mI\x1b[0m: &{%p}\n\n",
 		v2.I,
+	)
+
+	if !bytes.Equal(w.WrittenData, []byte(expected)) {
+		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
+	}
+}
+
+func testSameSourceInfoColor(t *testing.T) {
+	w := &MockWriter{}
+
+	slogOpts := &slog.HandlerOptions{
+		AddSource: true,
+	}
+
+	o := &Options{
+		HandlerOptions:      slogOpts,
+		TimeFormat:          "[]",
+		SameSourceInfoColor: true,
+	}
+
+	logger := slog.New(NewHandler(w, o))
+
+	// Capture the line number right before the log call
+	_, file, line, _ := runtime.Caller(0)
+	logger.Info("msg",
+		slog.Int("i", 1),
+	)
+
+	line++
+
+	expected := fmt.Sprintf(
+		"\x1b[2m\x1b[37m[]\x1b[0m \x1b[34m@@@\x1b[0m \x1b[4m\x1b[33m%s:%d\x1b[0m\x1b[0m\n\x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mi\x1b[0m: \x1b[33m1\x1b[0m\n", file, line,
 	)
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
