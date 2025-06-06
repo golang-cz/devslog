@@ -109,17 +109,18 @@ slog.SetDefault(logger)
 
 ## Options
 
-| Parameter          | Description                                                    | Default        | Value                |
-| ------------------ | -------------------------------------------------------------- | -------------- | -------------------- |
-| MaxSlicePrintSize  | Specifies the maximum number of elements to print for a slice. | 50             | uint                 |
-| SortKeys           | Determines if attributes should be sorted by keys.             | false          | bool                 |
-| TimeFormat         | Time format for timestamp.                                     | "[15:04:05]"   | string               |
-| NewLineAfterLog    | Add blank line after each log                                  | false          | bool                 |
-| StringIndentation  | Indent \n in strings                                           | false          | bool                 |
-| DebugColor         | Color for Debug level                                          | devslog.Blue   | devslog.Color (uint) |
-| InfoColor          | Color for Info level                                           | devslog.Green  | devslog.Color (uint) |
-| WarnColor          | Color for Warn level                                           | devslog.Yellow | devslog.Color (uint) |
-| ErrorColor         | Color for Error level                                          | devslog.Red    | devslog.Color (uint) |
-| MaxErrorStackTrace | Max stack trace frames for errors                              | 0              | uint                 |
-| StringerFormatter  | Use Stringer interface for formatting                          | false          | bool                 |
-| NoColor            | Disable coloring                                               | false          | bool                 |
+| Parameter           | Description                                                    | Default        | Value                |
+| ------------------- | -------------------------------------------------------------- | -------------- | -------------------- |
+| MaxSlicePrintSize   | Specifies the maximum number of elements to print for a slice. | 50             | uint                 |
+| SortKeys            | Determines if attributes should be sorted by keys.             | false          | bool                 |
+| TimeFormat          | Time format for timestamp.                                     | "[15:04:05]"   | string               |
+| NewLineAfterLog     | Add blank line after each log                                  | false          | bool                 |
+| StringIndentation   | Indent \n in strings                                           | false          | bool                 |
+| DebugColor          | Color for Debug level                                          | devslog.Blue   | devslog.Color (uint) |
+| InfoColor           | Color for Info level                                           | devslog.Green  | devslog.Color (uint) |
+| WarnColor           | Color for Warn level                                           | devslog.Yellow | devslog.Color (uint) |
+| ErrorColor          | Color for Error level                                          | devslog.Red    | devslog.Color (uint) |
+| MaxErrorStackTrace  | Max stack trace frames for errors                              | 0              | uint                 |
+| StringerFormatter   | Use Stringer interface for formatting                          | false          | bool                 |
+| NoColor             | Disable coloring                                               | false          | bool                 |
+| SameSourceInfoColor | Keep same color for whole source info                          | false          | bool                 |
