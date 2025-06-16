@@ -96,7 +96,7 @@ func replaceAttr(groups []string, a slog.Attr) slog.Attr {
 	case slog.SourceKey:
 		source := a.Value.Any().(*slog.Source)
 		source.File = filepath.Base(source.File)
-		return slog.Attr{}
+		// return slog.Attr{}
 	}
 
 	return a
