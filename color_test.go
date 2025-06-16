@@ -10,10 +10,11 @@ func Test_Color(t *testing.T) {
 	testGetColor(t, h)
 
 	b := []byte("Hello")
-	testColorCs(t, b, h)
-	testColorCsf(t, b, h)
-	testColorCsb(t, b, h)
-	testColorUl(t, b, h)
+	testColorColorString(t, b, h)
+	testColorColorStringFainted(t, b, h)
+	testColorColorStringBackground(t, b, h)
+	testColorUnderlineText(t, b, h)
+	testColorFaintedText(t, b, h)
 }
 
 func testGetColor(t *testing.T, h *developHandler) {
@@ -32,8 +33,8 @@ func testGetColor(t *testing.T, h *developHandler) {
 	}
 }
 
-func testColorCs(t *testing.T, b []byte, h *developHandler) {
-	result := h.cs(b, fgGreen)
+func testColorColorString(t *testing.T, b []byte, h *developHandler) {
+	result := h.colorString(b, fgGreen)
 
 	expected := []byte("\x1b[32mHello\x1b[0m")
 	if !bytes.Equal(expected, result) {
@@ -41,8 +42,8 @@ func testColorCs(t *testing.T, b []byte, h *developHandler) {
 	}
 }
 
-func testColorCsf(t *testing.T, b []byte, h *developHandler) {
-	result := h.csf(b, fgBlue)
+func testColorColorStringFainted(t *testing.T, b []byte, h *developHandler) {
+	result := h.colorStringFainted(b, fgBlue)
 
 	expected := []byte("\x1b[2m\x1b[34mHello\x1b[0m")
 	if !bytes.Equal(expected, result) {
@@ -50,8 +51,8 @@ func testColorCsf(t *testing.T, b []byte, h *developHandler) {
 	}
 }
 
-func testColorCsb(t *testing.T, b []byte, h *developHandler) {
-	result := h.csb(b, fgYellow, bgRed)
+func testColorColorStringBackground(t *testing.T, b []byte, h *developHandler) {
+	result := h.colorStringBackgorund(b, fgYellow, bgRed)
 
 	expected := []byte("\x1b[41m\x1b[33mHello\x1b[0m")
 	if !bytes.Equal(expected, result) {
@@ -59,10 +60,19 @@ func testColorCsb(t *testing.T, b []byte, h *developHandler) {
 	}
 }
 
-func testColorUl(t *testing.T, b []byte, h *developHandler) {
-	result := h.ul(b)
+func testColorUnderlineText(t *testing.T, b []byte, h *developHandler) {
+	result := h.underlineText(b)
 
 	expected := []byte("\x1b[4mHello\x1b[0m")
+	if !bytes.Equal(expected, result) {
+		t.Errorf("\nExpected: %s\nResult:   %s\nExpected: %[1]q\nResult:   %[2]q", expected, result)
+	}
+}
+
+func testColorFaintedText(t *testing.T, b []byte, h *developHandler) {
+	result := h.faintedText(b)
+
+	expected := []byte("\x1b[2mHello\x1b[0m")
 	if !bytes.Equal(expected, result) {
 		t.Errorf("\nExpected: %s\nResult:   %s\nExpected: %[1]q\nResult:   %[2]q", expected, result)
 	}
