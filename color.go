@@ -73,7 +73,7 @@ func (h *developHandler) getColor(c Color) color {
 }
 
 // Color string foreground
-func (h *developHandler) cs(b []byte, fgColor foregroundColor) []byte {
+func (h *developHandler) colorString(b []byte, fgColor foregroundColor) []byte {
 	if h.opts.NoColor {
 		return b
 	}
@@ -84,7 +84,7 @@ func (h *developHandler) cs(b []byte, fgColor foregroundColor) []byte {
 }
 
 // Color string fainted
-func (h *developHandler) csf(b []byte, fgColor foregroundColor) []byte {
+func (h *developHandler) colorStringFainted(b []byte, fgColor foregroundColor) []byte {
 	if h.opts.NoColor {
 		return b
 	}
@@ -96,7 +96,7 @@ func (h *developHandler) csf(b []byte, fgColor foregroundColor) []byte {
 }
 
 // Color string background
-func (h *developHandler) csb(b []byte, fgColor foregroundColor, bgColor backgroundColor) []byte {
+func (h *developHandler) colorStringBackgorund(b []byte, fgColor foregroundColor, bgColor backgroundColor) []byte {
 	if h.opts.NoColor {
 		return b
 	}
@@ -108,12 +108,23 @@ func (h *developHandler) csb(b []byte, fgColor foregroundColor, bgColor backgrou
 }
 
 // Underline text
-func (h *developHandler) ul(b []byte) []byte {
+func (h *developHandler) underlineText(b []byte) []byte {
 	if h.opts.NoColor {
 		return b
 	}
 
 	b = append(underlineColor, b...)
+	b = append(b, resetColor...)
+	return b
+}
+
+// Fainted text
+func (h *developHandler) faintedText(b []byte) []byte {
+	if h.opts.NoColor {
+		return b
+	}
+
+	b = append(faintColor, b...)
 	b = append(b, resetColor...)
 	return b
 }

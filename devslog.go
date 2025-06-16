@@ -164,7 +164,7 @@ func (h *developHandler) withGroupOrAttrs(goa groupOrAttrs) *developHandler {
 
 func (h *developHandler) Handle(ctx context.Context, r slog.Record) error {
 	b := make([]byte, 0, 1024)
-	b = append(b, h.csf([]byte(r.Time.Format(h.opts.TimeFormat)), fgWhite)...)
+	b = append(b, h.faintedText([]byte(r.Time.Format(h.opts.TimeFormat)))...)
 	b = append(b, ' ')
 	b = h.formatSourceInfo(b, &r)
 	b = h.levelMessage(b, &r)
@@ -195,15 +195,15 @@ func (h *developHandler) formatSourceInfo(b []byte, r *slog.Record) []byte {
 			}
 		}
 
-		b = append(b, h.cs([]byte("@@@"), fgBlue)...)
+		b = append(b, h.colorStringFainted([]byte("@@@"), fgYellow)...)
 		b = append(b, ' ')
 
 		if h.opts.SameSourceInfoColor {
-			b = append(b, h.ul(h.cs(append(append([]byte(s.File), ':'), []byte(strconv.Itoa(s.Line))...), fgYellow))...)
+			b = append(b, h.underlineText(h.colorString(append(append([]byte(s.File), ':'), []byte(strconv.Itoa(s.Line))...), fgBlue))...)
 		} else {
-			b = append(b, h.ul(h.cs([]byte(s.File), fgYellow))...)
-			b = append(b, ':')
-			b = append(b, h.cs([]byte(strconv.Itoa(s.Line)), fgRed)...)
+			b = append(b, h.underlineText(h.colorStringFainted([]byte(s.File), fgCyan))...)
+			b = append(b, h.faintedText([]byte(":"))...)
+			b = append(b, h.colorStringFainted([]byte(strconv.Itoa(s.Line)), fgRed)...)
 		}
 
 		b = append(b, '\n')
@@ -237,9 +237,9 @@ func (h *developHandler) levelMessage(b []byte, r *slog.Record) []byte {
 		c = h.getColor(h.opts.ErrorColor)
 	}
 
-	b = append(b, h.csb([]byte(" "+ls+" "), fgBlack, c.bg)...)
+	b = append(b, h.colorStringBackgorund([]byte(" "+ls+" "), fgBlack, c.bg)...)
 	b = append(b, ' ')
-	b = append(b, h.cs([]byte(r.Message), c.fg)...)
+	b = append(b, h.colorString([]byte(r.Message), c.fg)...)
 	b = append(b, '\n')
 
 	return b
@@ -293,14 +293,14 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 		sort.Sort(as)
 	}
 
-	paddingNoColor := h.padding(as, group, nil, h.cs)
-	paddingColor := h.padding(as, group, fgMagenta, h.cs)
+	paddingNoColor := h.padding(as, group, nil, h.colorString)
+	paddingColor := h.padding(as, group, fgMagenta, h.colorString)
 	for _, a := range as {
 		if h.opts.ReplaceAttr != nil {
 			a = h.opts.ReplaceAttr(group, a)
 		}
 
-		key := h.cs([]byte(a.Key), fgMagenta)
+		key := h.colorString([]byte(a.Key), fgMagenta)
 		val := []byte(a.Value.String())
 		valOld := val
 		vs := val
@@ -308,17 +308,17 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 
 		switch a.Value.Kind() {
 		case slog.KindFloat64, slog.KindInt64, slog.KindUint64:
-			mark = h.cs([]byte("#"), fgYellow)
-			val = h.cs(val, fgYellow)
+			mark = h.colorString([]byte("#"), fgYellow)
+			val = h.colorString(val, fgYellow)
 		case slog.KindBool:
-			mark = h.cs([]byte("#"), fgRed)
-			val = h.cs(val, fgRed)
+			mark = h.colorString([]byte("#"), fgRed)
+			val = h.colorString(val, fgRed)
 		case slog.KindString:
 			if len(val) == 0 {
-				val = h.csf([]byte("empty"), fgWhite)
+				val = h.colorStringFainted([]byte("empty"), fgWhite)
 			} else if h.isURL(val) {
-				mark = h.cs([]byte("*"), fgBlue)
-				val = h.ul(h.cs(val, fgBlue))
+				mark = h.colorString([]byte("*"), fgBlue)
+				val = h.underlineText(h.colorString(val, fgBlue))
 			} else {
 				if h.opts.StringIndentation {
 					count := l*2 + (4 + (paddingNoColor))
@@ -326,25 +326,25 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 				}
 			}
 		case slog.KindTime, slog.KindDuration:
-			mark = h.cs([]byte("@"), fgCyan)
-			val = h.cs(val, fgCyan)
+			mark = h.colorString([]byte("@"), fgCyan)
+			val = h.colorString(val, fgCyan)
 		case slog.KindAny:
 			av := a.Value.Any()
 			if err, ok := av.(error); ok {
-				mark = h.cs([]byte("E"), fgRed)
+				mark = h.colorString([]byte("E"), fgRed)
 				val = h.formatError(err, l)
 				break
 			}
 
 			if t, ok := av.(*time.Time); ok {
-				mark = h.cs([]byte("@"), fgCyan)
-				val = h.cs([]byte(t.String()), fgCyan)
+				mark = h.colorString([]byte("@"), fgCyan)
+				val = h.colorString([]byte(t.String()), fgCyan)
 				break
 			}
 
 			if d, ok := av.(*time.Duration); ok {
-				mark = h.cs([]byte("@"), fgCyan)
-				val = h.cs([]byte(d.String()), fgCyan)
+				mark = h.colorString([]byte("@"), fgCyan)
+				val = h.colorString([]byte(d.String()), fgCyan)
 				break
 			}
 
@@ -363,58 +363,58 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 			avt := reflect.TypeOf(av)
 			avv := reflect.ValueOf(av)
 			if avt == nil {
-				mark = h.cs([]byte("!"), fgRed)
+				mark = h.colorString([]byte("!"), fgRed)
 				val = h.nilString()
 				break
 			}
 
 			ut, uv, ptrs := h.reducePointerTypeValue(avt, avv)
-			val = bytes.Repeat(h.cs([]byte("*"), fgRed), ptrs)
+			val = bytes.Repeat(h.colorString([]byte("*"), fgRed), ptrs)
 
 			switch ut.Kind() {
 			case reflect.Array:
-				mark = h.cs([]byte("A"), fgGreen)
+				mark = h.colorString([]byte("A"), fgGreen)
 				val = h.formatSlice(avt, avv, l, vi)
 			case reflect.Slice:
-				mark = h.cs([]byte("S"), fgGreen)
+				mark = h.colorString([]byte("S"), fgGreen)
 				val = h.formatSlice(avt, avv, l, vi)
 			case reflect.Map:
-				mark = h.cs([]byte("M"), fgGreen)
+				mark = h.colorString([]byte("M"), fgGreen)
 				val = h.formatMap(avt, avv, l, vi)
 			case reflect.Struct:
-				mark = h.cs([]byte("S"), fgYellow)
+				mark = h.colorString([]byte("S"), fgYellow)
 				val = h.formatStruct(avt, avv, 0, vi)
 			case reflect.Float32, reflect.Float64:
-				mark = h.cs([]byte("#"), fgYellow)
+				mark = h.colorString([]byte("#"), fgYellow)
 				vs = atb(uv.Float())
-				val = append(val, h.cs(vs, fgYellow)...)
+				val = append(val, h.colorString(vs, fgYellow)...)
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				mark = h.cs([]byte("#"), fgYellow)
+				mark = h.colorString([]byte("#"), fgYellow)
 				vs = atb(uv.Int())
-				val = append(val, h.cs(vs, fgYellow)...)
+				val = append(val, h.colorString(vs, fgYellow)...)
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				mark = h.cs([]byte("#"), fgYellow)
+				mark = h.colorString([]byte("#"), fgYellow)
 				vs = atb(uv.Uint())
-				val = append(val, h.cs(vs, fgYellow)...)
+				val = append(val, h.colorString(vs, fgYellow)...)
 			case reflect.Bool:
-				mark = h.cs([]byte("#"), fgRed)
+				mark = h.colorString([]byte("#"), fgRed)
 				vs = atb(uv.Bool())
-				val = append(val, h.cs(vs, fgRed)...)
+				val = append(val, h.colorString(vs, fgRed)...)
 			case reflect.String:
 				s := uv.String()
 				if len(s) == 0 {
-					val = h.csf([]byte("empty"), fgWhite)
+					val = h.colorStringFainted([]byte("empty"), fgWhite)
 				} else if h.isURL([]byte(s)) {
-					val = h.ul(h.cs(val, fgBlue))
+					val = h.underlineText(h.colorString(val, fgBlue))
 				} else {
 					val = []byte(uv.String())
 				}
 			default:
-				mark = h.cs([]byte("!"), fgRed)
-				val = h.cs(atb("Unknown type"), fgRed)
+				mark = h.colorString([]byte("!"), fgRed)
+				val = h.colorString(atb("Unknown type"), fgRed)
 			}
 		case slog.KindGroup:
-			mark = h.cs([]byte("G"), fgGreen)
+			mark = h.colorString([]byte("G"), fgGreen)
 			var ga attributes
 			ga = a.Value.Group()
 			group = append(group, a.Key)
@@ -436,7 +436,7 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 			s := []byte(` "`)
 			s = append(s, []byte(a.Value.String())...)
 			s = append(s, '"')
-			b = append(b, h.csf(s, fgWhite)...)
+			b = append(b, h.colorStringFainted(s, fgWhite)...)
 		}
 
 		if a.Value.Kind() != slog.KindGroup {
@@ -474,7 +474,7 @@ func (h *developHandler) isURL(u []byte) bool {
 
 func (h *developHandler) formatError(err error, l int) (b []byte) {
 	if err == nil {
-		b = append(b, h.ul(h.cs(h.nilString(), fgRed))...)
+		b = append(b, h.underlineText(h.colorString(h.nilString(), fgRed))...)
 
 		return
 	}
@@ -482,8 +482,8 @@ func (h *developHandler) formatError(err error, l int) (b []byte) {
 	for i := 0; err != nil; i++ {
 		b = append(b, '\n')
 		b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
-		b = append(b, h.cs([]byte(strconv.Itoa(i)), fgRed)...)
-		b = append(b, h.cs([]byte(": "), fgWhite)...)
+		b = append(b, h.colorString([]byte(strconv.Itoa(i)), fgRed)...)
+		b = append(b, h.colorString([]byte(": "), fgWhite)...)
 
 		errMsg := err.Error()
 		ue := errors.Unwrap(err)
@@ -496,16 +496,16 @@ func (h *developHandler) formatError(err error, l int) (b []byte) {
 			errMsg = fmt.Sprintf("[%T]", err)
 		}
 
-		b = append(b, h.cs([]byte(errMsg), fgRed)...)
+		b = append(b, h.colorString([]byte(errMsg), fgRed)...)
 
 		for j, fileLine := range h.getFileLineFromPC(h.extractPCFromError(err)) {
 			b = append(b, '\n')
 			tb := strconv.Itoa(j)
 			b = append(b, bytes.Repeat([]byte(" "), l*2+6)...)
 			b = append(b, bytes.Repeat([]byte(" "), len(tb))...)
-			b = append(b, h.cs([]byte(tb), fgBlue)...)
+			b = append(b, h.colorString([]byte(tb), fgBlue)...)
 			b = append(b, []byte(": ")...)
-			b = append(b, h.ul(h.cs([]byte(fileLine), fgBlue))...)
+			b = append(b, h.underlineText(h.colorString([]byte(fileLine), fgBlue))...)
 		}
 
 		err = ue
@@ -518,7 +518,7 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int, v
 	ts := h.buildTypeString(st.String())
 	_, sv, _ = h.reducePointerTypeValue(st, sv)
 
-	b = append(b, h.cs([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
+	b = append(b, h.colorString([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
 	b = append(b, ' ')
 	b = append(b, ts...)
 	d := min(len(strconv.Itoa(int(h.opts.MaxSlicePrintSize))), len(strconv.Itoa(sv.Len())))
@@ -528,8 +528,8 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int, v
 			b = append(b, '\n')
 			b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
 			b = append(b, bytes.Repeat([]byte(" "), d+2)...)
-			b = append(b, h.cs([]byte("..."), fgBlue)...)
-			b = append(b, h.cs([]byte("]"), fgGreen)...)
+			b = append(b, h.colorString([]byte("..."), fgBlue)...)
+			b = append(b, h.colorString([]byte("]"), fgGreen)...)
 			break
 		}
 
@@ -540,7 +540,7 @@ func (h *developHandler) formatSlice(st reflect.Type, sv reflect.Value, l int, v
 		b = append(b, '\n')
 		b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
 		b = append(b, bytes.Repeat([]byte(" "), d-len(tb))...)
-		b = append(b, h.cs([]byte(tb), fgGreen)...)
+		b = append(b, h.colorString([]byte(tb), fgGreen)...)
 		b = append(b, ':')
 		b = append(b, ' ')
 		b = append(b, h.elementType(t, v, l, l*2+d+2, vi)...)
@@ -555,7 +555,7 @@ func (h *developHandler) formatMap(st reflect.Type, sv reflect.Value, l int, vi 
 
 	pc := h.mapKeyPadding(sv, &fgGreen)
 	pr := h.mapKeyPadding(sv, nil)
-	b = append(b, h.cs([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
+	b = append(b, h.colorString([]byte(strconv.Itoa(sv.Len())), fgBlue)...)
 	b = append(b, ' ')
 	b = append(b, ts...)
 	sk := h.sortMapKeys(sv)
@@ -564,7 +564,7 @@ func (h *developHandler) formatMap(st reflect.Type, sv reflect.Value, l int, vi 
 		v = h.reducePointerValue(v)
 		k = h.reducePointerValue(k)
 
-		tb := h.cs(atb(k.Interface()), fgGreen)
+		tb := h.colorString(atb(k.Interface()), fgGreen)
 		b = append(b, '\n')
 		b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
 		b = append(b, tb...)
@@ -592,7 +592,7 @@ func (h *developHandler) formatStruct(st reflect.Type, sv reflect.Value, l int, 
 		v := sv.Field(i)
 		t := v.Type()
 
-		tb := h.cs([]byte(sv.Type().Field(i).Name), fgGreen)
+		tb := h.colorString([]byte(sv.Type().Field(i).Name), fgGreen)
 		b = append(b, '\n')
 		b = append(b, bytes.Repeat([]byte(" "), l*2+4)...)
 		b = append(b, tb...)
@@ -642,19 +642,19 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 			b = h.elementType(t, v.Elem(), l, p, vi)
 		}
 	case reflect.Float32, reflect.Float64:
-		b = h.cs(atb(v.Float()), fgYellow)
+		b = h.colorString(atb(v.Float()), fgYellow)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		b = h.cs(atb(v.Int()), fgYellow)
+		b = h.colorString(atb(v.Int()), fgYellow)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		b = h.cs(atb(v.Uint()), fgYellow)
+		b = h.colorString(atb(v.Uint()), fgYellow)
 	case reflect.Bool:
-		b = h.cs(atb(v.Bool()), fgRed)
+		b = h.colorString(atb(v.Bool()), fgRed)
 	case reflect.String:
 		s := v.String()
 		if len(s) == 0 {
-			b = h.csf([]byte("empty"), fgWhite)
+			b = h.colorStringFainted([]byte("empty"), fgWhite)
 		} else if h.isURL([]byte(s)) {
-			b = h.ul(h.cs([]byte(s), fgBlue))
+			b = h.underlineText(h.colorString([]byte(s), fgBlue))
 		} else {
 			if h.opts.StringIndentation {
 				b = []byte(strings.ReplaceAll(string(s), "\n", "\n"+strings.Repeat(" ", l*2+p+4)))
@@ -672,7 +672,7 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 	default:
 		b = atb("Unknown type: ")
 		b = append(b, atb(v.Kind())...)
-		b = h.cs(b, fgRed)
+		b = h.colorString(b, fgRed)
 	}
 
 	return b
@@ -684,11 +684,11 @@ func (h *developHandler) buildTypeString(ts string) (b []byte) {
 	for len(t) > 0 {
 		switch t[0] {
 		case '*':
-			b = append(b, h.cs([]byte{t[0]}, fgRed)...)
+			b = append(b, h.colorString([]byte{t[0]}, fgRed)...)
 		case '[', ']':
-			b = append(b, h.cs([]byte{t[0]}, fgGreen)...)
+			b = append(b, h.colorString([]byte{t[0]}, fgGreen)...)
 		default:
-			b = append(b, h.cs([]byte{t[0]}, fgYellow)...)
+			b = append(b, h.colorString([]byte{t[0]}, fgYellow)...)
 		}
 
 		t = t[1:]
@@ -713,7 +713,7 @@ func (h *developHandler) mapKeyPadding(rv reflect.Value, fgColor *foregroundColo
 		k = h.reducePointerValue(k)
 		c := len(atb(k.Interface()))
 		if fgColor != nil {
-			c = len(h.cs(atb(k.Interface()), *fgColor))
+			c = len(h.colorString(atb(k.Interface()), *fgColor))
 		}
 
 		if c > p {
@@ -733,7 +733,7 @@ func (h *developHandler) structKeyPadding(sv reflect.Value, fgColor *foregroundC
 
 		c := len(st.Field(i).Name)
 		if fgColor != nil {
-			c = len(h.cs([]byte(st.Field(i).Name), *fgColor))
+			c = len(h.colorString([]byte(st.Field(i).Name), *fgColor))
 		}
 
 		if c > p {
@@ -783,8 +783,8 @@ func isNilValue(v reflect.Value) bool {
 }
 
 func (h *developHandler) nilString() []byte {
-	b := h.cs([]byte("<"), fgRed)
-	b = append(b, h.cs([]byte("nil"), fgYellow)...)
-	b = append(b, h.cs([]byte(">"), fgRed)...)
+	b := h.colorString([]byte("<"), fgRed)
+	b = append(b, h.colorString([]byte("nil"), fgYellow)...)
+	b = append(b, h.colorString([]byte(">"), fgRed)...)
 	return b
 }
