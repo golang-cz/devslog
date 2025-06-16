@@ -987,7 +987,7 @@ func testSameSourceInfoColor(t *testing.T) {
 	line++
 
 	expected := fmt.Sprintf(
-		"\x1b[2m[]\x1b[0m \x1b[2m\x1b[33m@@@\x1b[0m \x1b[4m\x1b[34m%s:%d\x1b[0m\x1b[0m\n\x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mi\x1b[0m: \x1b[33m1\x1b[0m\n", file, line,
+		"\x1b[2m[]\x1b[0m \x1b[2m\x1b[33m@@@\x1b[0m \x1b[4m\x1b[2m\x1b[36m%s:%d\x1b[0m\x1b[0m\n\x1b[42m\x1b[30m INFO \x1b[0m \x1b[32mmsg\x1b[0m\n\x1b[33m#\x1b[0m \x1b[35mi\x1b[0m: \x1b[33m1\x1b[0m\n", file, line,
 	)
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
