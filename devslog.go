@@ -181,15 +181,29 @@ func (h *developHandler) Handle(ctx context.Context, r slog.Record) error {
 func (h *developHandler) formatSourceInfo(b []byte, r *slog.Record) []byte {
 	if h.opts.AddSource {
 		f, _ := runtime.CallersFrames([]uintptr{r.PC}).Next()
+		s := &slog.Source{
+			Function: f.Function,
+			File:     f.File,
+			Line:     f.Line,
+		}
+
+		if h.opts.ReplaceAttr != nil {
+			attr := h.opts.ReplaceAttr([]string{}, slog.Any(slog.SourceKey, s))
+			if attr.Key == "" {
+				b = append(b, '\n')
+				return b
+			}
+		}
+
 		b = append(b, h.cs([]byte("@@@"), fgBlue)...)
 		b = append(b, ' ')
 
 		if h.opts.SameSourceInfoColor {
-			b = append(b, h.ul(h.cs(append(append([]byte(f.File), ':'), []byte(strconv.Itoa(f.Line))...), fgYellow))...)
+			b = append(b, h.ul(h.cs(append(append([]byte(s.File), ':'), []byte(strconv.Itoa(s.Line))...), fgYellow))...)
 		} else {
-			b = append(b, h.ul(h.cs([]byte(f.File), fgYellow))...)
+			b = append(b, h.ul(h.cs([]byte(s.File), fgYellow))...)
 			b = append(b, ':')
-			b = append(b, h.cs([]byte(strconv.Itoa(f.Line)), fgRed)...)
+			b = append(b, h.cs([]byte(strconv.Itoa(s.Line)), fgRed)...)
 		}
 
 		b = append(b, '\n')
