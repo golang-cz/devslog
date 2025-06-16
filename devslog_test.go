@@ -471,9 +471,7 @@ func testReplaceLevelAttributes(t *testing.T) {
 	logger.Debug("starting background job")
 	logger.Log(ctx, LevelTrace, "button clicked")
 
-	expected := fmt.Sprintf(
-		"\x1b[2m[]\x1b[0m \x1b[41m\x1b[30m EMERGENCY \x1b[0m \x1b[31mmissing pilots\x1b[0m\n  \x1b[35msev\x1b[0m: EMERGENCY\n\n\x1b[2m[]\x1b[0m \x1b[41m\x1b[30m ERROR \x1b[0m \x1b[31mfailed to start engines\x1b[0m\n  \x1b[35merr\x1b[0m: missing fuel\n  \x1b[35msev\x1b[0m: ERROR\n\n\x1b[2m[]\x1b[0m \x1b[43m\x1b[30m WARNING \x1b[0m \x1b[33mfalling back to default value\x1b[0m\n  \x1b[35msev\x1b[0m: WARNING\n\n\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m NOTICE \x1b[0m \x1b[32mall systems are running\x1b[0m\n  \x1b[35msev\x1b[0m: NOTICE\n\n\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32minitiating launch\x1b[0m\n  \x1b[35msev\x1b[0m: INFO\n\n\x1b[2m[]\x1b[0m \x1b[44m\x1b[30m DEBUG \x1b[0m \x1b[34mstarting background job\x1b[0m\n  \x1b[35msev\x1b[0m: DEBUG\n\n",
-	)
+	expected := "\x1b[2m[]\x1b[0m \x1b[41m\x1b[30m EMERGENCY \x1b[0m \x1b[31mmissing pilots\x1b[0m\n  \x1b[35msev\x1b[0m: EMERGENCY\n\n\x1b[2m[]\x1b[0m \x1b[41m\x1b[30m ERROR \x1b[0m \x1b[31mfailed to start engines\x1b[0m\n  \x1b[35merr\x1b[0m: missing fuel\n  \x1b[35msev\x1b[0m: ERROR\n\n\x1b[2m[]\x1b[0m \x1b[43m\x1b[30m WARNING \x1b[0m \x1b[33mfalling back to default value\x1b[0m\n  \x1b[35msev\x1b[0m: WARNING\n\n\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m NOTICE \x1b[0m \x1b[32mall systems are running\x1b[0m\n  \x1b[35msev\x1b[0m: NOTICE\n\n\x1b[2m[]\x1b[0m \x1b[42m\x1b[30m INFO \x1b[0m \x1b[32minitiating launch\x1b[0m\n  \x1b[35msev\x1b[0m: INFO\n\n\x1b[2m[]\x1b[0m \x1b[44m\x1b[30m DEBUG \x1b[0m \x1b[34mstarting background job\x1b[0m\n  \x1b[35msev\x1b[0m: DEBUG\n\n"
 
 	if !bytes.Equal(w.WrittenData, []byte(expected)) {
 		t.Errorf("\nExpected:\n%s\nGot:\n%s\nExpected:\n%[1]q\nGot:\n%[2]q", expected, w.WrittenData)
