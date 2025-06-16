@@ -199,7 +199,7 @@ func (h *developHandler) formatSourceInfo(b []byte, r *slog.Record) []byte {
 		b = append(b, ' ')
 
 		if h.opts.SameSourceInfoColor {
-			b = append(b, h.underlineText(h.colorString(append(append([]byte(s.File), ':'), []byte(strconv.Itoa(s.Line))...), fgBlue))...)
+			b = append(b, h.underlineText(h.colorStringFainted(append(append([]byte(s.File), ':'), []byte(strconv.Itoa(s.Line))...), fgCyan))...)
 		} else {
 			b = append(b, h.underlineText(h.colorStringFainted([]byte(s.File), fgCyan))...)
 			b = append(b, h.faintedText([]byte(":"))...)
