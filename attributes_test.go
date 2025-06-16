@@ -11,7 +11,6 @@ func Test_Attributes(t *testing.T) {
 	testAttributesLess(t)
 	testAttributesLessGroupTrue(t)
 	testAttributesLessGroupFalse(t)
-	testAttributesPadding(t)
 }
 
 func testAttributesLen(t *testing.T) {
@@ -82,21 +81,5 @@ func testAttributesLessGroupFalse(t *testing.T) {
 
 	if less {
 		t.Error("Expected the first attribute to be less than the second")
-	}
-}
-
-func testAttributesPadding(t *testing.T) {
-	someValue := slog.StringValue("value")
-	attrs := attributes{
-		slog.Attr{Key: "key1", Value: someValue},
-		slog.Attr{Key: "key2", Value: someValue},
-	}
-
-	h := NewHandler(nil, nil)
-	padding := attrs.padding(fgMagenta, h.cs)
-
-	expectedPadding := 13
-	if padding != expectedPadding {
-		t.Errorf("Expected padding: %d, but got: %d", expectedPadding, padding)
 	}
 }

@@ -274,74 +274,74 @@ func (h *developHandler) processAttributes(b []byte, r *slog.Record) []byte {
 	return b
 }
 
-func (h *developHandler) colorize(b []byte, as attributes, l int, g []string, vi visited) []byte {
+func (h *developHandler) colorize(b []byte, as attributes, l int, group []string, vi visited) []byte {
 	if h.opts.SortKeys {
 		sort.Sort(as)
 	}
 
-	pr := as.padding(nil, h.cs)
-	pc := as.padding(fgMagenta, h.cs)
+	paddingNoColor := h.padding(as, group, nil, h.cs)
+	paddingColor := h.padding(as, group, fgMagenta, h.cs)
 	for _, a := range as {
 		if h.opts.ReplaceAttr != nil {
-			a = h.opts.ReplaceAttr(g, a)
+			a = h.opts.ReplaceAttr(group, a)
 		}
 
-		k := h.cs([]byte(a.Key), fgMagenta)
-		v := []byte(a.Value.String())
-		vo := v
-		vs := v
-		m := []byte(" ")
+		key := h.cs([]byte(a.Key), fgMagenta)
+		val := []byte(a.Value.String())
+		valOld := val
+		vs := val
+		mark := []byte(" ")
 
 		switch a.Value.Kind() {
 		case slog.KindFloat64, slog.KindInt64, slog.KindUint64:
-			m = h.cs([]byte("#"), fgYellow)
-			v = h.cs(v, fgYellow)
+			mark = h.cs([]byte("#"), fgYellow)
+			val = h.cs(val, fgYellow)
 		case slog.KindBool:
-			m = h.cs([]byte("#"), fgRed)
-			v = h.cs(v, fgRed)
+			mark = h.cs([]byte("#"), fgRed)
+			val = h.cs(val, fgRed)
 		case slog.KindString:
-			if len(v) == 0 {
-				v = h.csf([]byte("empty"), fgWhite)
-			} else if h.isURL(v) {
-				m = h.cs([]byte("*"), fgBlue)
-				v = h.ul(h.cs(v, fgBlue))
+			if len(val) == 0 {
+				val = h.csf([]byte("empty"), fgWhite)
+			} else if h.isURL(val) {
+				mark = h.cs([]byte("*"), fgBlue)
+				val = h.ul(h.cs(val, fgBlue))
 			} else {
 				if h.opts.StringIndentation {
-					count := l*2 + (4 + (pr))
-					v = []byte(strings.ReplaceAll(string(v), "\n", "\n"+strings.Repeat(" ", count)))
+					count := l*2 + (4 + (paddingNoColor))
+					val = []byte(strings.ReplaceAll(string(val), "\n", "\n"+strings.Repeat(" ", count)))
 				}
 			}
 		case slog.KindTime, slog.KindDuration:
-			m = h.cs([]byte("@"), fgCyan)
-			v = h.cs(v, fgCyan)
+			mark = h.cs([]byte("@"), fgCyan)
+			val = h.cs(val, fgCyan)
 		case slog.KindAny:
 			av := a.Value.Any()
 			if err, ok := av.(error); ok {
-				m = h.cs([]byte("E"), fgRed)
-				v = h.formatError(err, l)
+				mark = h.cs([]byte("E"), fgRed)
+				val = h.formatError(err, l)
 				break
 			}
 
 			if t, ok := av.(*time.Time); ok {
-				m = h.cs([]byte("@"), fgCyan)
-				v = h.cs([]byte(t.String()), fgCyan)
+				mark = h.cs([]byte("@"), fgCyan)
+				val = h.cs([]byte(t.String()), fgCyan)
 				break
 			}
 
 			if d, ok := av.(*time.Duration); ok {
-				m = h.cs([]byte("@"), fgCyan)
-				v = h.cs([]byte(d.String()), fgCyan)
+				mark = h.cs([]byte("@"), fgCyan)
+				val = h.cs([]byte(d.String()), fgCyan)
 				break
 			}
 
 			if textMarshaller, ok := av.(encoding.TextMarshaler); ok {
-				v = atb(textMarshaller)
+				val = atb(textMarshaller)
 				break
 			}
 
 			if h.opts.StringerFormatter {
 				if stringer, ok := av.(fmt.Stringer); ok {
-					v = []byte(stringer.String())
+					val = []byte(stringer.String())
 					break
 				}
 			}
@@ -349,76 +349,76 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string, vi
 			avt := reflect.TypeOf(av)
 			avv := reflect.ValueOf(av)
 			if avt == nil {
-				m = h.cs([]byte("!"), fgRed)
-				v = h.nilString()
+				mark = h.cs([]byte("!"), fgRed)
+				val = h.nilString()
 				break
 			}
 
 			ut, uv, ptrs := h.reducePointerTypeValue(avt, avv)
-			v = bytes.Repeat(h.cs([]byte("*"), fgRed), ptrs)
+			val = bytes.Repeat(h.cs([]byte("*"), fgRed), ptrs)
 
 			switch ut.Kind() {
 			case reflect.Array:
-				m = h.cs([]byte("A"), fgGreen)
-				v = h.formatSlice(avt, avv, l, vi)
+				mark = h.cs([]byte("A"), fgGreen)
+				val = h.formatSlice(avt, avv, l, vi)
 			case reflect.Slice:
-				m = h.cs([]byte("S"), fgGreen)
-				v = h.formatSlice(avt, avv, l, vi)
+				mark = h.cs([]byte("S"), fgGreen)
+				val = h.formatSlice(avt, avv, l, vi)
 			case reflect.Map:
-				m = h.cs([]byte("M"), fgGreen)
-				v = h.formatMap(avt, avv, l, vi)
+				mark = h.cs([]byte("M"), fgGreen)
+				val = h.formatMap(avt, avv, l, vi)
 			case reflect.Struct:
-				m = h.cs([]byte("S"), fgYellow)
-				v = h.formatStruct(avt, avv, 0, vi)
+				mark = h.cs([]byte("S"), fgYellow)
+				val = h.formatStruct(avt, avv, 0, vi)
 			case reflect.Float32, reflect.Float64:
-				m = h.cs([]byte("#"), fgYellow)
+				mark = h.cs([]byte("#"), fgYellow)
 				vs = atb(uv.Float())
-				v = append(v, h.cs(vs, fgYellow)...)
+				val = append(val, h.cs(vs, fgYellow)...)
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				m = h.cs([]byte("#"), fgYellow)
+				mark = h.cs([]byte("#"), fgYellow)
 				vs = atb(uv.Int())
-				v = append(v, h.cs(vs, fgYellow)...)
+				val = append(val, h.cs(vs, fgYellow)...)
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				m = h.cs([]byte("#"), fgYellow)
+				mark = h.cs([]byte("#"), fgYellow)
 				vs = atb(uv.Uint())
-				v = append(v, h.cs(vs, fgYellow)...)
+				val = append(val, h.cs(vs, fgYellow)...)
 			case reflect.Bool:
-				m = h.cs([]byte("#"), fgRed)
+				mark = h.cs([]byte("#"), fgRed)
 				vs = atb(uv.Bool())
-				v = append(v, h.cs(vs, fgRed)...)
+				val = append(val, h.cs(vs, fgRed)...)
 			case reflect.String:
 				s := uv.String()
 				if len(s) == 0 {
-					v = h.csf([]byte("empty"), fgWhite)
+					val = h.csf([]byte("empty"), fgWhite)
 				} else if h.isURL([]byte(s)) {
-					v = h.ul(h.cs(v, fgBlue))
+					val = h.ul(h.cs(val, fgBlue))
 				} else {
-					v = []byte(uv.String())
+					val = []byte(uv.String())
 				}
 			default:
-				m = h.cs([]byte("!"), fgRed)
-				v = h.cs(atb("Unknown type"), fgRed)
+				mark = h.cs([]byte("!"), fgRed)
+				val = h.cs(atb("Unknown type"), fgRed)
 			}
 		case slog.KindGroup:
-			m = h.cs([]byte("G"), fgGreen)
+			mark = h.cs([]byte("G"), fgGreen)
 			var ga attributes
 			ga = a.Value.Group()
-			g = append(g, a.Key)
+			group = append(group, a.Key)
 
-			v = []byte("\n")
-			v = append(v, h.colorize(nil, ga, l+1, g, vi)...)
+			val = []byte("\n")
+			val = append(val, h.colorize(nil, ga, l+1, group, vi)...)
 		}
 
 		b = append(b, bytes.Repeat([]byte(" "), l*2)...)
-		b = append(b, m...)
+		b = append(b, mark...)
 		b = append(b, ' ')
-		b = append(b, k...)
-		b = append(b, bytes.Repeat([]byte(" "), pc-len(k))...)
+		b = append(b, key...)
+		b = append(b, bytes.Repeat([]byte(" "), paddingColor-len(key))...)
 		b = append(b, ':', ' ')
-		b = append(b, v...)
+		b = append(b, val...)
 
 		stringer := reflect.ValueOf(a.Value).MethodByName("String")
-		if stringer.IsValid() && !bytes.Equal(vo, vs) {
+		if stringer.IsValid() && !bytes.Equal(valOld, vs) {
 			s := []byte(` "`)
 			s = append(s, []byte(a.Value.String())...)
 			s = append(s, '"')
@@ -431,6 +431,26 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, g []string, vi
 	}
 
 	return b
+}
+
+func (h *developHandler) padding(a attributes, g []string, color foregroundColor, colorFunction func(b []byte, fgColor foregroundColor) []byte) int {
+	var padding int
+	for _, attr := range a {
+		if h.opts.ReplaceAttr != nil {
+			attr = h.opts.ReplaceAttr(g, attr)
+		}
+
+		colorLength := len(attr.Key)
+		if color != nil {
+			colorLength = len(colorFunction([]byte(attr.Key), color))
+		}
+
+		if colorLength > padding {
+			padding = colorLength
+		}
+	}
+
+	return padding
 }
 
 func (h *developHandler) isURL(u []byte) bool {
