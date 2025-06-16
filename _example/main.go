@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"math"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-cz/devslog"
@@ -91,6 +92,11 @@ func replaceAttr(groups []string, a slog.Attr) slog.Attr {
 		default:
 			a.Value = slog.StringValue("EMERGENCY")
 		}
+
+	case slog.SourceKey:
+		source := a.Value.Any().(*slog.Source)
+		source.File = filepath.Base(source.File)
+		return slog.Attr{}
 	}
 
 	return a
