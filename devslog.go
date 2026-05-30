@@ -311,8 +311,8 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 			mark = h.colorString([]byte("#"), fgYellow)
 			val = h.colorString(val, fgYellow)
 		case slog.KindBool:
-			mark = h.colorString([]byte("#"), fgRed)
-			val = h.colorString(val, fgRed)
+			mark = h.colorString([]byte("#"), fgBlue)
+			val = h.colorString(val, fgBlue)
 		case slog.KindString:
 			if len(val) == 0 {
 				val = h.colorStringFainted([]byte("empty"), fgWhite)
@@ -397,9 +397,9 @@ func (h *developHandler) colorize(b []byte, as attributes, l int, group []string
 				vs = atb(uv.Uint())
 				val = append(val, h.colorString(vs, fgYellow)...)
 			case reflect.Bool:
-				mark = h.colorString([]byte("#"), fgRed)
+				mark = h.colorString([]byte("#"), fgBlue)
 				vs = atb(uv.Bool())
-				val = append(val, h.colorString(vs, fgRed)...)
+				val = append(val, h.colorString(vs, fgBlue)...)
 			case reflect.String:
 				s := uv.String()
 				if len(s) == 0 {
@@ -648,7 +648,7 @@ func (h *developHandler) elementType(t reflect.Type, v reflect.Value, l int, p i
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		b = h.colorString(atb(v.Uint()), fgYellow)
 	case reflect.Bool:
-		b = h.colorString(atb(v.Bool()), fgRed)
+		b = h.colorString(atb(v.Bool()), fgBlue)
 	case reflect.String:
 		s := v.String()
 		if len(s) == 0 {
