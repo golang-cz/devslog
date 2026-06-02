@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/url"
+	"os"
 	"reflect"
 	"runtime"
 	"sort"
@@ -118,7 +119,25 @@ func NewHandler(out io.Writer, o *Options) *developHandler {
 		}
 	}
 
+	if envDisablesColor() {
+		h.opts.NoColor = true
+	}
+
 	return h
+}
+
+// envDisablesColor reports whether the environment signals that ANSI color
+// output should be suppressed. Follows the NO_COLOR convention
+// (https://no-color.org/) — any non-empty value disables color — and the
+// older TERM=dumb convention.
+func envDisablesColor() bool {
+	if os.Getenv("NO_COLOR") != "" {
+		return true
+	}
+	if os.Getenv("TERM") == "dumb" {
+		return true
+	}
+	return false
 }
 
 func ensureValidColor(c Color, defaultColor Color) Color {
