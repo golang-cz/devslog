@@ -16,6 +16,7 @@ func TestNewHandler(t *testing.T) {
 	testNewHandlerWithOptions(t)
 	testNewHandlerWithNilOptions(t)
 	testNewHandlerWithNilSlogHandlerOptions(t)
+	testNewHandlerEnvDisablesColor(t)
 }
 
 func TestMethods(t *testing.T) {
@@ -158,6 +159,43 @@ func testNewHandlerWithNilSlogHandlerOptions(t *testing.T) {
 	if h.out != nil {
 		t.Errorf("Expected writer to be nil")
 	}
+}
+
+func testNewHandlerEnvDisablesColor(t *testing.T) {
+	cases := []struct {
+		name string
+		env  map[string]string
+		want bool
+	}{
+		{"no env", nil, false},
+		{"NO_COLOR=1", map[string]string{"NO_COLOR": "1"}, true},
+		{"NO_COLOR=anything", map[string]string{"NO_COLOR": "yes please"}, true},
+		{"NO_COLOR empty is ignored", map[string]string{"NO_COLOR": ""}, false},
+		{"TERM=dumb", map[string]string{"TERM": "dumb"}, true},
+		{"TERM=xterm-256color", map[string]string{"TERM": "xterm-256color"}, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			for k, v := range tc.env {
+				t.Setenv(k, v)
+			}
+
+			h := NewHandler(nil, nil)
+			if h.opts.NoColor != tc.want {
+				t.Errorf("NoColor = %v, want %v", h.opts.NoColor, tc.want)
+			}
+		})
+	}
+
+	t.Run("env overrides explicit NoColor=false", func(t *testing.T) {
+		t.Setenv("NO_COLOR", "1")
+
+		h := NewHandler(nil, &Options{NoColor: false})
+		if !h.opts.NoColor {
+			t.Error("NO_COLOR env must override explicit NoColor=false")
+		}
+	})
 }
 
 func testEnabled(t *testing.T) {
